@@ -1,5 +1,6 @@
 import { env } from "./config/env.js";
 import { setupBotHandlers, registerCommands } from "./bot/index.js";
+import { startScheduler } from "./schedulers/dailyParser.js";
 
 async function main() {
   console.log("YEP Savings Deal Bot starting...");
@@ -9,6 +10,7 @@ async function main() {
 
   setupBotHandlers();
   registerCommands();
+  startScheduler();
 
   console.log("Bot initialized successfully!");
 }
