@@ -10,3 +10,7 @@ export {
   type CompareDealsOptions,
   type CompareDealsResult,
 } from "./dealComparator.js";
+export {
+  sendDealNotification,
+  sendBatchNotifications,
+} from "./notificationService.js";
