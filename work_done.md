@@ -153,3 +153,40 @@ API client fully implemented with proper validation and error handling. TypeScri
 Deal processing pipeline complete. New deal detection functional. Products and deals stored correctly. All type checks and build pass. Ready for Phase 6.
 
 ---
+
+## Phase 6: Telegram Bot Core ✅
+**Commit:** `a39851b` | **Date:** Jan 17, 2026
+
+### Completed
+- ✅ Created `src/config/telegram.ts` with bot configuration:
+  - Bot initialization with TELEGRAM_BOT_TOKEN from environment
+  - Polling mode enabled for real-time updates
+- ✅ Created `src/bot/commands/start.ts` with welcome message:
+  - Welcome message with feature overview
+  - Automatic user creation in database for new users
+  - Show available commands list
+  - Error handling for failed operations
+- ✅ Created `src/bot/handlers/callbackHandler.ts`:
+  - Parse callback data format (action:dealId)
+  - Validate actions (favorite, unfavorite, hide, unhide)
+  - Route to appropriate handlers with user feedback
+- ✅ Created `src/bot/index.ts` with bot initialization:
+  - Set up /start command handler
+  - Set up callback query handler
+  - Polling error handling
+  - Register commands with BotFather via setMyCommands
+- ✅ Updated `src/index.ts` to initialize bot handlers on startup
+
+### Files Created
+- `src/config/telegram.ts` (8 lines)
+- `src/bot/commands/start.ts` (56 lines)
+- `src/bot/handlers/callbackHandler.ts` (73 lines)
+- `src/bot/index.ts` (43 lines)
+
+### Files Modified
+- `src/index.ts` - Added bot initialization
+
+### Status
+Bot core complete. /start command works with database user creation. Callback infrastructure ready. All type checks pass. Ready for Phase 7.
+
+---
