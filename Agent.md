@@ -110,6 +110,13 @@ deal-bot/
 
 **CRITICAL**: When working on implementation phases from deal_bot_plan.md, you MUST follow this workflow for EACH phase:
 
+**IMPORTANT - ALWAYS COMMIT AFTER EACH PHASE!**
+- You MUST create two commits for every phase:
+  1. Implementation commit (after completing code changes)
+  2. Work plan update commit (after updating work_done.md)
+- Never skip committing - this is a mandatory step
+- If you forget to commit, do it immediately before starting the next phase
+
 #### Phase Workflow Steps
 
 1. **START PHASE**
