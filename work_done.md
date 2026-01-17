@@ -190,3 +190,32 @@ Deal processing pipeline complete. New deal detection functional. Products and d
 Bot core complete. /start command works with database user creation. Callback infrastructure ready. All type checks pass. Ready for Phase 7.
 
 ---
+
+## Phase 7: Notification Service ✅
+**Commit:** `e4d153f` | **Date:** Jan 17, 2026
+
+### Completed
+- ✅ Created `src/utils/formatters.ts` with utility functions:
+  - `formatPrice()` - Format price strings with dollar sign and 2 decimals
+  - `calculateDiscount()` - Calculate percentage discount from source to current price
+  - `formatDealMessage()` - Format complete deal message with emojis, prices, discount, and time left
+- ✅ Created `src/services/notificationService.ts` with notification functions:
+  - `sendDealNotification()` - Send deal notification to a single user
+  - `sendBatchNotifications()` - Send notifications to multiple users with rate limiting
+  - Inline keyboard with Favorite and Hide buttons
+  - Product image attachment when available
+  - Automatic notification logging to track success/failure
+  - Error handling and retry logic
+- ✅ Updated `src/services/index.ts` to export notification functions
+
+### Files Created
+- `src/utils/formatters.ts` (74 lines)
+- `src/services/notificationService.ts` (84 lines)
+
+### Files Modified
+- `src/services/index.ts` - Added notification exports
+
+### Status
+Notification service complete. Messages formatted with images and buttons. Logging in place. All type checks and build pass. Ready for Phase 8.
+
+---
