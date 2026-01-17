@@ -219,3 +219,41 @@ Bot core complete. /start command works with database user creation. Callback in
 Notification service complete. Messages formatted with images and buttons. Logging in place. All type checks and build pass. Ready for Phase 8.
 
 ---
+
+## Phase 8: Scheduled Parsing ✅
+**Commit:** `5a61e4a` | **Date:** Jan 17, 2026
+
+### Completed
+- ✅ Created `src/schedulers/dailyParser.ts` with cron job setup:
+  - `runDailyParse()` - Main function for manual and scheduled execution
+  - `scheduleDailyParse()` - Configure node-cron with schedule from environment
+  - `startScheduler()` - Initialize and start the scheduler
+  - Timezone support (America/Edmonton by default)
+- ✅ Implemented daily parse job:
+  - Fetch all unique store_ids from active users
+  - For each store, fetch deals from YEP API
+  - Process and store deals using dealProcessor
+  - Identify and track new deals
+  - Mark expired deals as inactive using expireExpiredDeals()
+  - Comprehensive logging for debugging
+- ✅ Added manual trigger option for testing:
+  - Manual mode flag in runDailyParse()
+  - Optional storeId parameter to test specific stores
+  - Clear status messages for manual vs scheduled runs
+- ✅ Implemented error recovery:
+  - Continue with next store if one fails
+  - Try-catch blocks around store processing
+  - Error logging for debugging
+  - Fatal error handling for top-level failures
+- ✅ Updated `src/index.ts` to initialize scheduler on startup
+
+### Files Created
+- `src/schedulers/dailyParser.ts` (100 lines)
+
+### Files Modified
+- `src/index.ts` - Added scheduler initialization
+
+### Status
+Cron job configured and running on schedule. Full pipeline: fetch -> process -> notify complete. Error handling and logging in place. All type checks and build pass. Ready for Phase 9.
+
+---
