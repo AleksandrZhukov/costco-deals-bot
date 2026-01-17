@@ -81,6 +81,44 @@ API client fully implemented with proper validation and error handling. TypeScri
 
 ---
 
+## Phase 5: Deal Processing Service ✅
+**Commit:** `e425a4a` | **Date:** Jan 17, 2026
+
+### Completed
+- ✅ Created `src/services/dealProcessor.ts` with deal processing pipeline:
+  - `processDealsFromApi()` - Main function to process deals from YEP API
+  - Product upsert logic - Create or update products by UPC code
+  - Deal upsert logic - Create or update deals by deal_id
+  - Product frequency counter increments automatically
+  - Deal expiration handling based on end_time
+  - Returns detailed statistics on created/updated items
+- ✅ Created `src/services/dealComparator.ts` for deal comparison:
+  - `findNewDeals()` - Identify newly created deals
+  - `getDealsNeedingNotification()` - Filter deals eligible for notifications
+  - Compare by deal_id and is_latest flag
+  - Time-based filtering for recent deals (within 1 hour)
+- ✅ Implemented deal expiration logic:
+  - `expireExpiredDeals()` - Mark deals as inactive when end_time has passed
+  - Update is_active flag during processing
+  - Automatic expiration check in processDeal function
+- ✅ Updated `src/database/queries.ts`:
+  - Added `discountType`, `startTime`, `endTime` to updateDeal function
+  - Better support for deal updates
+- ✅ Created `src/services/index.ts` barrel export for clean imports
+
+### Files Created
+- `src/services/dealProcessor.ts` (184 lines)
+- `src/services/dealComparator.ts` (82 lines)
+- `src/services/index.ts` (11 lines)
+
+### Files Modified
+- `src/database/queries.ts` - Added missing fields to updateDeal function
+
+### Status
+Deal processing pipeline complete. New deal detection functional. Products and deals stored correctly. All type checks and build pass. Ready for Phase 6.
+
+---
+
 ## Phase 3: Database Layer ✅
 **Commit:** `9c74110` | **Date:** Jan 17, 2026
 
