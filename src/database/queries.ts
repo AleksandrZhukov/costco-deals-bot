@@ -165,6 +165,9 @@ export async function updateDeal(
     currentPrice?: string;
     sourcePrice?: string;
     discountPrice?: string;
+    discountType?: number;
+    startTime?: Date;
+    endTime?: Date;
     isActive?: boolean;
     isLatest?: boolean;
     likesCount?: number;
