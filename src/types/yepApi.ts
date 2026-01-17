@@ -49,22 +49,29 @@ export const YepGoodsTypeSchema = z.object({
   dr: z.number().optional(),
 });
 
-// Zod schema for complete YEP API response
+// Zod schema for successful YEP API response data
+export const YepApiSuccessDataSchema = z.object({
+  goodsType: z.array(YepGoodsTypeSchema),
+  goods: z.array(YepDealItemSchema),
+  discountCnt: z.number(),
+  totalPage: z.number(),
+  process: z.number(),
+});
+
+// Zod schema for complete YEP API response (handles both success and error)
 export const YepApiResponseSchema = z.object({
   code: z.number(),
   message: z.string(),
-  data: z.object({
-    goodsType: z.array(YepGoodsTypeSchema),
-    goods: z.array(YepDealItemSchema),
-    discountCnt: z.number(),
-    totalPage: z.number(),
-    process: z.number(),
-  }),
+  data: z.union([
+    z.string(),
+    YepApiSuccessDataSchema,
+  ]),
 });
 
 // TypeScript types inferred from Zod schemas
 export type YepDealItem = z.infer<typeof YepDealItemSchema>;
 export type YepGoodsType = z.infer<typeof YepGoodsTypeSchema>;
+export type YepApiSuccessData = z.infer<typeof YepApiSuccessDataSchema>;
 export type YepApiResponse = z.infer<typeof YepApiResponseSchema>;
 
 // Helper function to safely parse YEP API response
@@ -85,4 +92,17 @@ export function safeParseYepApiResponse(data: unknown): {
   } else {
     return { success: false, error: result.error };
   }
+}
+
+// Helper function to check if response is successful
+export function isApiSuccessResponse(response: YepApiResponse): boolean {
+  return response.code === 200 && typeof response.data !== "string";
+}
+
+// Helper function to extract deal data from a success response
+export function getDealDataFromResponse(response: YepApiResponse): YepApiSuccessData | null {
+  if (isApiSuccessResponse(response)) {
+    return response.data as YepApiSuccessData;
+  }
+  return null;
 }
