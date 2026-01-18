@@ -1,5 +1,5 @@
 import type TelegramBot from "node-telegram-bot-api";
-import { setDealHidden, addToCart, removeFromCart, isInCart, setDealFavorite } from "../../database/queries.js";
+import { setDealHidden, addToCart, removeFromCart, isInCart, setDealFavorite, isDealFavorited } from "../../database/queries.js";
 import { handleStoreChange, handleToggleNotifications } from "../commands/settings.js";
 import { handlePagination } from "../commands/deals.js";
 import { removeFromCartCallback, clearCartCallback, cartSummaryCallback } from "../commands/cart.js";
@@ -76,10 +76,12 @@ async function addToCartCallback(
   try {
     await addToCart(userId, dealId);
 
+    const isFavorited = await isDealFavorited(userId, dealId);
+
     const keyboard = {
       inline_keyboard: [
         [
-          { text: "❤️ Favorite", callback_data: `favorite:${dealId}` },
+          { text: isFavorited ? "💔 Unfavorite" : "❤️ Favorite", callback_data: isFavorited ? `unfavorite:${dealId}` : `favorite:${dealId}` },
           { text: "👁️ Hide", callback_data: `hide:${dealId}` },
         ],
         [
@@ -123,10 +125,12 @@ async function removeCartFromDealCallback(
   try {
     await removeFromCart(userId, dealId);
 
+    const isFavorited = await isDealFavorited(userId, dealId);
+
     const keyboard = {
       inline_keyboard: [
         [
-          { text: "❤️ Favorite", callback_data: `favorite:${dealId}` },
+          { text: isFavorited ? "💔 Unfavorite" : "❤️ Favorite", callback_data: isFavorited ? `unfavorite:${dealId}` : `favorite:${dealId}` },
           { text: "👁️ Hide", callback_data: `hide:${dealId}` },
         ],
         [
