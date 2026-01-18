@@ -3,7 +3,7 @@ import { toggleFavorite } from "../commands/favorites.js";
 import { setDealHidden, addToCart, removeFromCart } from "../../database/queries.js";
 import { handleStoreChange, handleToggleNotifications } from "../commands/settings.js";
 import { handlePagination } from "../commands/deals.js";
-import { removeFromCartCallback, clearCartCallback } from "../commands/cart.js";
+import { removeFromCartCallback, clearCartCallback, cartSummaryCallback } from "../commands/cart.js";
 import { createUserActionTracker } from "../../utils/logger.js";
 import { logError } from "../../utils/errorLogger.js";
 
@@ -51,6 +51,8 @@ export function parseCallbackData(data: string): CallbackData | null {
       "removecart",
       "addcart",
       "remcart",
+      "cartsummary",
+      "cart",
     ];
 
     if (!validActions.includes(action)) {
@@ -257,6 +259,16 @@ export async function handleCallbackQuery(
       if (callbackData.dealId) {
         await removeCartFromDealCallback(bot, callbackQueryId, userId, callbackData.dealId, callbackMessage);
       }
+      break;
+
+    case "cartsummary":
+      await cartSummaryCallback(bot, callbackQueryId, userId);
+      break;
+
+    case "cart":
+      const { handleCartCommand } = await import("../commands/cart.js");
+      await bot.answerCallbackQuery(callbackQueryId);
+      await handleCartCommand(bot, userId);
       break;
 
     default:
