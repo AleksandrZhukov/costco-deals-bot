@@ -1,7 +1,7 @@
 export function formatPrice(price: string | null | undefined): string {
   if (!price) return "N/A";
   const numPrice = parseFloat(price);
-  if (isNaN(numPrice)) return price;
+  if (isNaN(numPrice) || numPrice === 0) return "N/A";
   return `$${numPrice.toFixed(2)}`;
 }
 
@@ -38,27 +38,23 @@ export function formatDealMessage(
   const discountPrice = formatPrice(deal.discountPrice);
   const sourcePrice = formatPrice(deal.sourcePrice);
   const currentPrice = formatPrice(deal.currentPrice);
+  const discountPercent = calculateDiscount(deal.sourcePrice, deal.currentPrice);
 
-  let message = `🏷️ ${product.brand}\n`;
+  const title = product.name ? `${product.brand} ${product.name}` : product.brand;
+  let message = `🏷️ ${title}\n\n`;
 
-  if (product.name) {
-    message += `${product.name}\n`;
+  message += `💰 -${discountPrice}`;
+
+  if (discountPercent !== "N/A") {
+    message += `  (-${discountPercent})`;
   }
 
-  message += `\n💰 ${discountPrice}`;
-
-  if (sourcePrice !== "N/A") {
+  if (sourcePrice !== "N/A" && sourcePrice !== "$0.00") {
     message += `\n💵 Original: ${sourcePrice}`;
   }
 
-  if (currentPrice !== "N/A" && sourcePrice !== "N/A") {
-    const sourceNum = parseFloat(deal.sourcePrice || "0");
-    const currentNum = parseFloat(deal.currentPrice || "0");
-    if (!isNaN(sourceNum) && !isNaN(currentNum) && sourceNum > currentNum) {
-      const saving = (sourceNum - currentNum).toFixed(2);
-      const percentage = ((sourceNum - currentNum) / sourceNum * 100).toFixed(0);
-      message += `\n📉 Save $${saving} (${percentage}%)`;
-    }
+  if (currentPrice !== "N/A" && currentPrice !== "$0.00") {
+    message += `\n📉 Current: ${currentPrice}`;
   }
 
   if (deal.endTime) {
@@ -71,7 +67,7 @@ export function formatDealMessage(
     const formattedDate = `${day}-${month}-${year}`;
 
     if (daysLeft > 0) {
-      message += `\n⏰ ${daysLeft} day${daysLeft > 1 ? "s" : ""} left (${formattedDate})`;
+      message += `\n⏰ ${daysLeft} days left (${formattedDate})`;
     } else if (daysLeft === 0) {
       message += `\n⏰ Ends today (${formattedDate})`;
     }
