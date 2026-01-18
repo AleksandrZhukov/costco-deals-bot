@@ -3,6 +3,7 @@ import { handleStartCommand } from "./commands/start.js";
 import { handleDealsCommand } from "./commands/deals.js";
 import { handleFavoritesCommand } from "./commands/favorites.js";
 import { handleSettingsCommand } from "./commands/settings.js";
+import { handleCartCommand } from "./commands/cart.js";
 import { handleCallbackQuery } from "./handlers/callbackHandler.js";
 
 export function setupBotHandlers(): void {
@@ -34,6 +35,11 @@ export function setupBotHandlers(): void {
     await handleSettingsCommand(bot, chatId);
   });
 
+  bot.onText(/\/cart/, async (msg) => {
+    const chatId = msg.chat.id;
+    await handleCartCommand(bot, chatId);
+  });
+
   bot.on("callback_query", async (query) => {
     const { id, data, from } = query;
 
@@ -57,6 +63,7 @@ export function registerCommands(): void {
       { command: "start", description: "Show welcome message" },
       { command: "deals", description: "Show current active deals" },
       { command: "favorites", description: "Show your favorite deals" },
+      { command: "cart", description: "View your shopping cart" },
       { command: "settings", description: "Configure your preferences" },
     ])
     .then(() => {

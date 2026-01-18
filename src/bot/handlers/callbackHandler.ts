@@ -3,6 +3,7 @@ import { toggleFavorite } from "../commands/favorites.js";
 import { setDealHidden } from "../../database/queries.js";
 import { handleStoreChange, handleToggleNotifications } from "../commands/settings.js";
 import { handlePagination } from "../commands/deals.js";
+import { removeFromCartCallback, clearCartCallback } from "../commands/cart.js";
 import { createUserActionTracker } from "../../utils/logger.js";
 import { logError } from "../../utils/errorLogger.js";
 
@@ -46,6 +47,8 @@ export function parseCallbackData(data: string): CallbackData | null {
       "set_store",
       "toggle_notifications",
       "page",
+      "clearcart",
+      "removecart",
     ];
 
     if (!validActions.includes(action)) {
@@ -134,6 +137,16 @@ export async function handleCallbackQuery(
         const storeId = user?.storeId ?? 25;
         await handlePagination(bot, userId, storeId, callbackData.offset);
         tracker.callback('page', { offset: String(callbackData.offset) });
+      }
+      break;
+
+    case "clearcart":
+      await clearCartCallback(bot, callbackQueryId, userId);
+      break;
+
+    case "removecart":
+      if (callbackData.dealId) {
+        await removeFromCartCallback(bot, callbackQueryId, userId, callbackData.dealId);
       }
       break;
 
