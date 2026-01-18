@@ -1,5 +1,8 @@
 import { bot } from "../config/telegram.js";
 import { handleStartCommand } from "./commands/start.js";
+import { handleDealsCommand } from "./commands/deals.js";
+import { handleFavoritesCommand } from "./commands/favorites.js";
+import { handleSettingsCommand } from "./commands/settings.js";
 import { handleCallbackQuery } from "./handlers/callbackHandler.js";
 
 export function setupBotHandlers(): void {
@@ -11,6 +14,24 @@ export function setupBotHandlers(): void {
       msg.from?.username,
       msg.from?.first_name
     );
+  });
+
+  bot.onText(/\/deals/, async (msg) => {
+    const chatId = msg.chat.id;
+    const { getUserByTelegramId } = await import("../database/queries.js");
+    const user = await getUserByTelegramId(chatId);
+    const storeId = user?.storeId ?? 25;
+    await handleDealsCommand(bot, chatId, storeId);
+  });
+
+  bot.onText(/\/favorites/, async (msg) => {
+    const chatId = msg.chat.id;
+    await handleFavoritesCommand(bot, chatId);
+  });
+
+  bot.onText(/\/settings/, async (msg) => {
+    const chatId = msg.chat.id;
+    await handleSettingsCommand(bot, chatId);
   });
 
   bot.on("callback_query", async (query) => {

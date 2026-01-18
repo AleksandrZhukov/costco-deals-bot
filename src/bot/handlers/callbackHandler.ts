@@ -1,31 +1,51 @@
 import type TelegramBot from "node-telegram-bot-api";
+import { toggleFavorite } from "../commands/favorites.js";
+import { setDealHidden } from "../../database/queries.js";
+import { handleStoreChange, handleToggleNotifications } from "../commands/settings.js";
 
 export interface CallbackData {
   action: string;
-  dealId: number;
+  dealId?: number;
+  storeId?: number;
 }
 
 export function parseCallbackData(data: string): CallbackData | null {
   try {
-    const [action, dealIdStr] = data.split(":");
+    const parts = data.split(":");
 
-    if (!action || !dealIdStr) {
+    if (parts.length === 0 || !parts[0]) {
       return null;
     }
 
-    const dealId = parseInt(dealIdStr, 10);
+    const action = parts[0];
+    const result: CallbackData = { action };
 
-    if (isNaN(dealId)) {
-      return null;
+    if (parts.length > 1 && parts[1]) {
+      const id = parseInt(parts[1], 10);
+
+      if (!isNaN(id)) {
+        if (action === "set_store") {
+          result.storeId = id;
+        } else {
+          result.dealId = id;
+        }
+      }
     }
 
-    const validActions = ["favorite", "unfavorite", "hide", "unhide"];
+    const validActions = [
+      "favorite",
+      "unfavorite",
+      "hide",
+      "unhide",
+      "set_store",
+      "toggle_notifications",
+    ];
 
     if (!validActions.includes(action)) {
       return null;
     }
 
-    return { action, dealId };
+    return result;
   } catch (error) {
     return null;
   }
@@ -46,29 +66,55 @@ export async function handleCallbackQuery(
     return;
   }
 
+  const userId = parseInt(queryId, 10);
+
+  if (isNaN(userId)) {
+    await bot.answerCallbackQuery(queryId, {
+      text: "❌ Invalid user ID",
+      show_alert: true,
+    });
+    return;
+  }
+
   switch (callbackData.action) {
     case "favorite":
-      await bot.answerCallbackQuery(queryId, {
-        text: "⭐ Deal added to favorites!",
-      });
+      if (callbackData.dealId) {
+        await toggleFavorite(bot, userId, callbackData.dealId, true);
+      }
       break;
 
     case "unfavorite":
-      await bot.answerCallbackQuery(queryId, {
-        text: "💔 Deal removed from favorites",
-      });
+      if (callbackData.dealId) {
+        await toggleFavorite(bot, userId, callbackData.dealId, false);
+      }
       break;
 
     case "hide":
-      await bot.answerCallbackQuery(queryId, {
-        text: "👁️ Deal hidden",
-      });
+      if (callbackData.dealId) {
+        await setDealHidden(userId, callbackData.dealId, true);
+        await bot.answerCallbackQuery(queryId, {
+          text: "👁️ Deal hidden",
+        });
+      }
       break;
 
     case "unhide":
-      await bot.answerCallbackQuery(queryId, {
-        text: "✅ Deal visible again",
-      });
+      if (callbackData.dealId) {
+        await setDealHidden(userId, callbackData.dealId, false);
+        await bot.answerCallbackQuery(queryId, {
+          text: "✅ Deal visible again",
+        });
+      }
+      break;
+
+    case "set_store":
+      if (callbackData.storeId) {
+        await handleStoreChange(bot, userId, callbackData.storeId);
+      }
+      break;
+
+    case "toggle_notifications":
+      await handleToggleNotifications(bot, userId);
       break;
 
     default:

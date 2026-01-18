@@ -206,6 +206,16 @@ export async function getDealWithProduct(dealId: number) {
   return result[0];
 }
 
+export async function getActiveDealsWithProducts() {
+  const result = await db
+    .select()
+    .from(deals)
+    .leftJoin(products, eq(deals.productId, products.id))
+    .where(eq(deals.isActive, true));
+
+  return result;
+}
+
 export async function markDealsAsInactive(dealIds: number[]) {
   if (dealIds.length === 0) return [];
 
@@ -265,6 +275,7 @@ export async function getUserFavoriteDeals(userTelegramId: number) {
     .select()
     .from(userDealPreferences)
     .leftJoin(deals, eq(userDealPreferences.dealId, deals.id))
+    .leftJoin(products, eq(deals.productId, products.id))
     .where(
       and(
         eq(userDealPreferences.userTelegramId, userTelegramId),
