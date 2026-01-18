@@ -48,27 +48,36 @@ export function formatDealMessage(
 
   message += `\n💰 ${discountPrice}`;
 
-  if (sourcePrice !== "N/A" && sourcePrice !== discountPrice) {
-    message += ` ~~${sourcePrice}~~`;
+  if (sourcePrice !== "N/A") {
+    message += `\n💵 Original: ${sourcePrice}`;
   }
 
   if (discount !== "N/A") {
-    message += ` 📉 ${discount} OFF`;
+    message += `\n📉 ${discount} OFF`;
   }
 
-  if (currentPrice !== "N/A" && currentPrice !== discountPrice) {
-    message += `\n💵 Current: ${currentPrice}`;
+  if (currentPrice !== "N/A" && currentPrice !== discountPrice && sourcePrice !== "N/A") {
+    const sourceNum = parseFloat(deal.sourcePrice || "0");
+    const currentNum = parseFloat(deal.currentPrice || "0");
+    if (!isNaN(sourceNum) && !isNaN(currentNum) && sourceNum > currentNum) {
+      const saving = (sourceNum - currentNum).toFixed(2);
+      message += ` ($${saving})`;
+    }
   }
 
   if (deal.endTime) {
     const endDate = new Date(deal.endTime);
     const now = new Date();
     const daysLeft = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    const day = String(endDate.getDate()).padStart(2, "0");
+    const month = String(endDate.getMonth() + 1).padStart(2, "0");
+    const year = endDate.getFullYear();
+    const formattedDate = `${day}-${month}-${year}`;
 
     if (daysLeft > 0) {
-      message += `\n⏰ ${daysLeft} day${daysLeft > 1 ? "s" : ""} left`;
+      message += `\n⏰ ${daysLeft} day${daysLeft > 1 ? "s" : ""} left (${formattedDate})`;
     } else if (daysLeft === 0) {
-      message += `\n⏰ Ends today`;
+      message += `\n⏰ Ends today (${formattedDate})`;
     }
   }
 
