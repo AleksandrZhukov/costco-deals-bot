@@ -192,7 +192,7 @@
     {
       "id": "US-007",
       "title": "Notification Logging",
-      "status": "open",
+      "status": "completed",
       "dependsOn": [
         "US-003"
       ],
@@ -203,7 +203,9 @@
         "Log batch notification summaries with success/failure counts",
         "Example: sent notification log includes user ID, notification type, channel, timestamp",
         "Negative case: failed notification should log user ID, error, and whether retry scheduled"
-      ]
+      ],
+      "completedAt": "2026-01-18T19:53:26Z",
+      "updatedAt": "2026-01-18T19:53:26Z"
     },
     {
       "id": "US-008",
