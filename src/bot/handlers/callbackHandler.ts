@@ -200,6 +200,20 @@ export async function handleCallbackQuery(
 
     case "hide":
       if (callbackData.dealId) {
+        const keyboard = {
+          inline_keyboard: [
+            [
+              { text: "❤️ Favorite", callback_data: `favorite:${callbackData.dealId}` },
+              { text: "👁️ Unhide", callback_data: `unhide:${callbackData.dealId}` },
+            ],
+          ],
+        };
+        if (callbackMessage) {
+          await bot.editMessageReplyMarkup(keyboard, {
+            chat_id: callbackMessage.chat.id,
+            message_id: callbackMessage.message_id,
+          });
+        }
         await bot.answerCallbackQuery(callbackQueryId, {
           text: "👁️ Deal hidden",
         });
@@ -210,6 +224,20 @@ export async function handleCallbackQuery(
 
     case "unhide":
       if (callbackData.dealId) {
+        const keyboard = {
+          inline_keyboard: [
+            [
+              { text: "❤️ Favorite", callback_data: `favorite:${callbackData.dealId}` },
+              { text: "👁️ Hide", callback_data: `hide:${callbackData.dealId}` },
+            ],
+          ],
+        };
+        if (callbackMessage) {
+          await bot.editMessageReplyMarkup(keyboard, {
+            chat_id: callbackMessage.chat.id,
+            message_id: callbackMessage.message_id,
+          });
+        }
         await bot.answerCallbackQuery(callbackQueryId, {
           text: "✅ Deal visible again",
         });

@@ -1,6 +1,5 @@
 import type TelegramBot from "node-telegram-bot-api";
-import { getActiveDealsWithProducts, getTotalActiveDealsCount } from "../../database/queries.js";
-import { isDealHiddenForUser } from "../../database/queries.js";
+import { getActiveDealsWithProductsNotHidden, getTotalVisibleActiveDealsCount } from "../../database/queries.js";
 import { isInCart } from "../../database/queries.js";
 import { formatDealMessage } from "../../utils/formatters.js";
 import { createUserActionTracker } from "../../utils/logger.js";
@@ -14,8 +13,6 @@ export async function handleDealsCommand(
   offset: number = 0
 ): Promise<void> {
   const tracker = createUserActionTracker(chatId);
-  let dealsShown = 0;
-  let dealsHidden = 0;
 
   try {
     if (offset === 0) {
@@ -23,8 +20,8 @@ export async function handleDealsCommand(
     }
 
     const [deals, totalCount] = await Promise.all([
-      getActiveDealsWithProducts(PAGE_SIZE, offset),
-      getTotalActiveDealsCount(),
+      getActiveDealsWithProductsNotHidden(chatId, PAGE_SIZE, offset),
+      getTotalVisibleActiveDealsCount(chatId),
     ]);
 
     if (!deals || deals.length === 0) {
@@ -53,17 +50,8 @@ export async function handleDealsCommand(
         continue;
       }
 
-      const isHidden = await isDealHiddenForUser(chatId, deal.deals.id);
-
-      if (isHidden) {
-        dealsHidden++;
-        continue;
-      }
-
       const message = formatDealMessage(deal.deals, deal.products);
       visibleDeals.push({ deal: deal.deals, products: deal.products, message });
-
-      dealsShown++;
     }
 
     for (const { deal, products, message } of visibleDeals) {
@@ -104,7 +92,9 @@ export async function handleDealsCommand(
       await new Promise((resolve) => setTimeout(resolve, 300));
     }
 
-    if (offset + dealsShown < totalCount) {
+    const dealsShown = visibleDeals.length;
+
+    if (offset + PAGE_SIZE < totalCount) {
       const keyboard = {
         inline_keyboard: [
           [
@@ -116,13 +106,13 @@ export async function handleDealsCommand(
         ],
       };
 
-      const finalCountText = `Showing ${startCount}-${Math.min(offset + dealsShown, totalCount)} of ${totalCount} deals`;
+      const finalCountText = `Showing ${startCount}-${Math.min(startCount + dealsShown - 1, totalCount)} of ${totalCount} deals`;
 
       await bot.sendMessage(chatId, finalCountText, {
         reply_markup: keyboard,
       });
     } else if (dealsShown > 0) {
-      const finalCountText = `Showing ${startCount}-${offset + dealsShown} of ${totalCount} deals`;
+      const finalCountText = `Showing ${startCount}-${startCount + dealsShown - 1} of ${totalCount} deals`;
       await bot.sendMessage(chatId, finalCountText);
     }
 
@@ -130,7 +120,7 @@ export async function handleDealsCommand(
       store_id: _storeId,
       deals_available: totalCount,
       deals_shown: offset + dealsShown,
-      deals_hidden: dealsHidden,
+      deals_hidden: 0,
     });
   } catch (error) {
     console.error("Error in /deals command:", error);

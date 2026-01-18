@@ -1,4 +1,4 @@
-import { eq, and, desc, count } from "drizzle-orm";
+import { eq, and, desc, count, or, isNull } from "drizzle-orm";
 import { db } from "../config/database.js";
 import { createDbQueryTracker, getAllQueryFrequencies } from "../utils/logger.js";
 import {
@@ -277,6 +277,61 @@ export async function getTotalActiveDealsCount(_storeId?: number, _userId?: numb
     .where(eq(deals.isActive, true));
 
   return result[0]?.count ?? 0;
+}
+
+export async function getTotalVisibleActiveDealsCount(userTelegramId: number) {
+  const result = await db
+    .select({ count: count() })
+    .from(deals)
+    .leftJoin(userDealPreferences, and(
+      eq(userDealPreferences.dealId, deals.id),
+      eq(userDealPreferences.userTelegramId, userTelegramId)
+    ))
+    .where(and(
+      eq(deals.isActive, true),
+      or(
+        isNull(userDealPreferences.id),
+        eq(userDealPreferences.isHidden, false)
+      )
+    ));
+
+  return result[0]?.count ?? 0;
+}
+
+export async function getActiveDealsWithProductsNotHidden(
+  userTelegramId: number,
+  limit?: number,
+  offset?: number
+) {
+  const query = db
+    .select()
+    .from(deals)
+    .innerJoin(products, eq(deals.productId, products.id))
+    .leftJoin(userDealPreferences, and(
+      eq(userDealPreferences.dealId, deals.id),
+      eq(userDealPreferences.userTelegramId, userTelegramId)
+    ))
+    .where(and(
+      eq(deals.isActive, true),
+      or(
+        isNull(userDealPreferences.id),
+        eq(userDealPreferences.isHidden, false)
+      )
+    ))
+    .orderBy(desc(deals.firstSeenAt));
+
+  if (limit !== undefined) {
+    query.limit(limit);
+  }
+
+  if (offset !== undefined) {
+    query.offset(offset);
+  }
+
+  return logSlowQuery(
+    'getActiveDealsWithProductsNotHidden',
+    () => query
+  );
 }
 
 
