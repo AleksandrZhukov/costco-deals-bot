@@ -301,7 +301,7 @@
     {
       "id": "US-013",
       "title": "Configure Axiom Dashboards and Alerts",
-      "status": "open",
+      "status": "completed",
       "dependsOn": [
         "US-012"
       ],
@@ -314,7 +314,9 @@
         "Set up alerts for error rate > 5%, API latency > 1s, job failures > 10%",
         "Example: Operations dashboard shows real-time error count and rate",
         "Negative case: alert should not fire for known maintenance window"
-      ]
+      ],
+      "completedAt": "2026-01-18T20:18:11Z",
+      "updatedAt": "2026-01-18T20:18:11Z"
     }
   ]
 }
