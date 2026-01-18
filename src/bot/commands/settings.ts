@@ -4,11 +4,14 @@ import { updateUserStoreId } from "../../database/queries.js";
 import { updateUserNotifications } from "../../database/queries.js";
 
 const AVAILABLE_STORES = [
-  { id: 25, name: "Beacon Hill" },
-  { id: 26, name: "Mckenzie Towne" },
-  { id: 27, name: "Copperfield" },
-  { id: 28, name: "Shawnessy" },
-  { id: 29, name: "Airdrie" },
+  { id: 25, name: "Calgary, AB" },
+  { id: 28, name: "Edmonton, AB" },
+  { id: 34, name: "Langley, BC" },
+  { id: 30, name: "Burlington, ON" },
+  { id: 29, name: "London, ON" },
+  { id: 23, name: "Mississauga & Oakville, ON" },
+  { id: 31, name: "Toronto, ON" },
+  { id: 19, name: "Saskatoon, SK" },
 ];
 
 export async function handleSettingsCommand(
