@@ -680,3 +680,27 @@ None
 Status: Story completed. All acceptance criteria implemented.
 ---
 
+
+
+## US-011: Create Logging Documentation ✅
+**Commit:** `[main 5b05e67] feat: US-011 - Create Logging Documentation
+ 3 files changed, 1486 insertions(+), 1 deletion(-)
+ create mode 100644 docs/AXIOM_QUERIES.md
+ create mode 100644 docs/LOGGING.md
+5b05e67a1b294df8411f76d42e43e71aa3b418e4` | **Date:** Jan 18, 2026
+
+### Completed
+- ✅ Create Logging Documentation
+
+### Files Created
+- `docs/AXIOM_QUERIES.md`
+- `docs/LOGGING.md`
+
+
+### Files Modified
+- `DEPLOYMENT.md`
+
+
+Status: Story completed. All acceptance criteria implemented.
+---
+
