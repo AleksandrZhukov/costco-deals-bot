@@ -125,8 +125,6 @@ export async function handleStoreChange(
       await runDailyParse({ manual: true, storeId });
     }
 
-    await handleSettingsCommand(bot, userId);
-
     tracker.settingsChanged('store', user.storeId, storeId);
   } catch (error) {
     console.error("Error changing store:", error);
