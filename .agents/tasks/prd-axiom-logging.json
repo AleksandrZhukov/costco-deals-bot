@@ -100,7 +100,7 @@
     {
       "id": "US-002",
       "title": "Define Wide Event Types",
-      "status": "open",
+      "status": "completed",
       "dependsOn": [
         "US-001"
       ],
@@ -111,7 +111,9 @@
         "Create src/utils/eventTypes.ts with constant values for all event types",
         "Example: creating a DealEvent has all required fields typed",
         "Negative case: missing required field in event should show TypeScript error"
-      ]
+      ],
+      "completedAt": "2026-01-18T19:35:33Z",
+      "updatedAt": "2026-01-18T19:35:33Z"
     },
     {
       "id": "US-003",
