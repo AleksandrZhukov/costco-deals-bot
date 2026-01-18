@@ -10,6 +10,9 @@ import {
   updateDeal,
   getActiveDeals,
 } from "../database/queries.js";
+import { log, createBatchTracker } from "../utils/logger.js";
+import { EventTypes } from "../utils/eventTypes.js";
+import { logError } from "../utils/errorLogger.js";
 
 type Product = typeof products.$inferSelect;
 type Deal = typeof deals.$inferSelect;
@@ -25,8 +28,9 @@ export interface ProcessDealsResult {
 
 export async function processDealsFromApi(
   apiDeals: YepDealItem[],
-  _storeId: number
+  storeId: number
 ): Promise<ProcessDealsResult> {
+  const batchTracker = createBatchTracker();
   const result: ProcessDealsResult = {
     productsCreated: 0,
     productsUpdated: 0,
@@ -35,8 +39,12 @@ export async function processDealsFromApi(
     dealsExpired: 0,
     newDeals: [],
   };
+  let failedDeals = 0;
+  const processingTimes: number[] = [];
 
   for (const apiDeal of apiDeals) {
+    const dealStartTime = Date.now();
+
     try {
       const productResult = await processProduct(apiDeal);
       if (productResult.productCreated) {
@@ -58,15 +66,70 @@ export async function processDealsFromApi(
       if (dealResult.expired) {
         result.dealsExpired++;
       }
+
+      const processingDuration = Date.now() - dealStartTime;
+      processingTimes.push(processingDuration);
+
+      log.info(EventTypes.DEAL_PROCESSED, {
+        deal_id: String(apiDeal.id),
+        product_upc: apiDeal.itm_upc_code,
+        store_id: storeId,
+        original_price: apiDeal.source_price ? parseFloat(apiDeal.source_price) : undefined,
+        current_price: apiDeal.cur_price ? parseFloat(apiDeal.cur_price) : undefined,
+        discount_percentage: apiDeal.source_price && apiDeal.cur_price
+          ? Math.round((parseFloat(apiDeal.source_price) - parseFloat(apiDeal.cur_price)) / parseFloat(apiDeal.source_price) * 100)
+          : undefined,
+        processing_duration_ms: processingDuration,
+        created: !!productResult.productCreated,
+        updated: !!productResult.productUpdated,
+        deal_created: !!dealResult.dealCreated,
+        deal_updated: !!dealResult.dealUpdated,
+        expired: !!dealResult.expired,
+      }, { deal_id: String(apiDeal.id), store_id: storeId, product_upc: apiDeal.itm_upc_code });
+
     } catch (error) {
-      console.error(`Error processing deal ${apiDeal.id}:`, error);
+      failedDeals++;
+      const processingDuration = Date.now() - dealStartTime;
+      processingTimes.push(processingDuration);
+
+      logError(error, {
+        error_type: EventTypes.ERROR_DATABASE,
+        deal_id: String(apiDeal.id),
+        product_upc: apiDeal.itm_upc_code,
+        store_id: storeId,
+      });
+
+      log.error(EventTypes.ERROR_DATABASE, {
+        deal_id: String(apiDeal.id),
+        product_upc: apiDeal.itm_upc_code,
+        store_id: storeId,
+        processing_duration_ms: processingDuration,
+        error_message: error instanceof Error ? error.message : String(error),
+      }, { deal_id: String(apiDeal.id), store_id: storeId });
     }
   }
+
+  const avgProcessingTime = processingTimes.length > 0
+    ? Math.round(processingTimes.reduce((a, b) => a + b, 0) / processingTimes.length)
+    : 0;
+
+  batchTracker.complete(EventTypes.PROCESSING_BATCH_COMPLETE, {
+    store_id: storeId,
+    deals_processed: apiDeals.length,
+    products_created: result.productsCreated,
+    products_updated: result.productsUpdated,
+    deals_created: result.dealsCreated,
+    deals_updated: result.dealsUpdated,
+    deals_expired: result.dealsExpired,
+    failed_deals: failedDeals,
+    avg_processing_time_ms: avgProcessingTime,
+  });
 
   return result;
 }
 
 export async function expireExpiredDeals(): Promise<number> {
+  const batchTracker = createBatchTracker();
   const now = new Date();
   const activeDeals = await getActiveDeals();
   let expiredCount = 0;
@@ -75,8 +138,19 @@ export async function expireExpiredDeals(): Promise<number> {
     if (deal.endTime && deal.endTime < now) {
       await updateDeal(deal.dealId, { isActive: false });
       expiredCount++;
+
+      log.info(EventTypes.DEAL_EXPIRED, {
+        deal_id: String(deal.dealId),
+        end_time: deal.endTime,
+        expired_at: now,
+      }, { deal_id: String(deal.dealId) });
     }
   }
+
+  batchTracker.complete(EventTypes.PROCESSING_BATCH_COMPLETE, {
+    total_deals_checked: activeDeals.length,
+    deals_expired: expiredCount,
+  });
 
   return expiredCount;
 }
