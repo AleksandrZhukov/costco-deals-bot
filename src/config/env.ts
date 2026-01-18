@@ -15,10 +15,6 @@ export const env = createEnv({
     YEP_API_BASE_URL: z.string().url().default("https://yepsavings.com"),
     YEP_API_COOKIE: z.string().default("ezoictest=stable"),
 
-    // Scheduling
-    DAILY_PARSE_SCHEDULE: z.string().default("0 9 * * *"),
-    TIMEZONE: z.string().default("America/Edmonton"),
-
     // Node Environment
     NODE_ENV: z
       .enum(["development", "production", "test"])

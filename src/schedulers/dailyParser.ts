@@ -1,5 +1,3 @@
-import cron from "node-cron";
-import { env } from "../config/env.js";
 import { fetchDealsForStore } from "../services/yepApi/index.js";
 import { processDealsFromApi, expireExpiredDeals } from "../services/index.js";
 import { getAllActiveUsers } from "../database/queries.js";
@@ -71,42 +69,4 @@ export async function runDailyParse(options: ParseJobOptions = {}): Promise<void
     console.error("Fatal error in daily parse:", error);
     throw error;
   }
-}
-
-export function scheduleDailyParse(): cron.ScheduledTask | null {
-  try {
-    const task = cron.schedule(
-      env.DAILY_PARSE_SCHEDULE,
-      async () => {
-        await runDailyParse();
-      },
-      {
-        timezone: env.TIMEZONE,
-      }
-    );
-
-    console.log(`✅ Daily parse scheduled: ${env.DAILY_PARSE_SCHEDULE} (${env.TIMEZONE})`);
-
-    return task;
-  } catch (error) {
-    console.error("Failed to schedule daily parse:", error);
-    return null;
-  }
-}
-
-export async function startScheduler(): Promise<cron.ScheduledTask | null> {
-  console.log("Starting scheduler...");
-
-  const task = scheduleDailyParse();
-
-  if (task) {
-    console.log("✅ Scheduler started successfully");
-  } else {
-    console.error("❌ Failed to start scheduler");
-  }
-
-  console.log("Running initial parse on startup...");
-  await runDailyParse({ manual: true });
-
-  return task;
 }
