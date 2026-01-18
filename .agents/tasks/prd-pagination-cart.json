@@ -1,0 +1,155 @@
+{
+  "version": 1,
+  "project": "Deal Bot Pagination & Cart",
+  "overview": "Implement pagination for deal listings to reduce spam and a shopping cart feature to track interested deals.",
+  "goals": [
+    "Reduce message volume by paginating deal results (10 per page)",
+    "Allow users to save deals to a temporary shopping cart",
+    "Provide a shopping list summary for in-store use"
+  ],
+  "nonGoals": [
+    "Automatic cart expiration/cleanup (manual only)",
+    "Payment processing or real checkout",
+    "Sharing carts between users"
+  ],
+  "successMetrics": [
+    "Users can view all deals via 'Show More' without spamming chat",
+    "Users can add/remove items from cart successfully",
+    "Cart summary displays correct total and items"
+  ],
+  "openQuestions": [],
+  "stack": {
+    "framework": "Node.js + TypeScript",
+    "hosting": "Self-hosted / VPS",
+    "database": "Postgres (via Drizzle ORM)",
+    "auth": "Telegram User ID"
+  },
+  "routes": [
+    { "path": "/deals", "name": "Deals Command", "purpose": "List deals with pagination" },
+    { "path": "/cart", "name": "Cart Command", "purpose": "View and manage shopping cart" }
+  ],
+  "uiNotes": [
+    "Deals: Show 10 items, then 'Show More' button",
+    "Cart: List items with 'Remove' buttons, 'Clear Cart' at bottom, 'Show Summary' at top",
+    "Deal Card: Add '🛒 Add to Cart' button next to Favorite/Hide"
+  ],
+  "dataModel": [
+    {
+      "entity": "user_shopping_cart",
+      "fields": ["id", "user_telegram_id", "deal_id", "added_at"],
+      "notes": "Unique constraint on (user_telegram_id, deal_id)"
+    }
+  ],
+  "importFormat": {
+    "description": "Not applicable",
+    "example": {}
+  },
+  "rules": [
+    "Pagination limit is hardcoded to 10 items",
+    "Cart is personal to the Telegram user",
+    "Adding an item already in cart is idempotent (or updates UI state)"
+  ],
+  "qualityGates": [
+    "npm run typecheck",
+    "npm run build"
+  ],
+  "stories": [
+    {
+      "id": "US-001",
+      "title": "Database Schema for Shopping Cart",
+      "status": "open",
+      "dependsOn": [],
+      "description": "As a developer, I want to add the shopping cart table to the database so users can store items.",
+      "acceptanceCriteria": [
+        "Define 'user_shopping_cart' table in 'src/database/schema.ts'",
+        "Include columns: id (serial), user_telegram_id (bigint), deal_id (fk), added_at (timestamp)",
+        "Add unique index on user_telegram_id + deal_id",
+        "Run 'npm run db:generate' to create migration file",
+        "Verify migration file is created in 'drizzle' folder (or equivalent)",
+        "Negative case: Duplicate insert should fail (handled by unique constraint)"
+      ]
+    },
+    {
+      "id": "US-002",
+      "title": "Database Queries for Cart & Pagination",
+      "status": "open",
+      "dependsOn": ["US-001"],
+      "description": "As a developer, I want to implement the necessary database functions for cart management and paginated deal fetching.",
+      "acceptanceCriteria": [
+        "Update 'src/database/queries.ts'",
+        "Implement 'addToCart(userId, dealId)'",
+        "Implement 'removeFromCart(userId, dealId)'",
+        "Implement 'getUserCart(userId)' (joining with deals)",
+        "Implement 'clearCart(userId)'",
+        "Implement 'isInCart(userId, dealId)'",
+        "Update 'getActiveDealsWithProducts' to accept 'limit' and 'offset'",
+        "Implement 'getTotalActiveDealsCount(storeId, userId)'",
+        "Ensure all functions are typed correctly"
+      ]
+    },
+    {
+      "id": "US-003",
+      "title": "Implement Deal Pagination",
+      "status": "open",
+      "dependsOn": ["US-002"],
+      "description": "As a user, I want to see deals in pages of 10 so the chat isn't flooded.",
+      "acceptanceCriteria": [
+        "Update 'src/bot/commands/deals.ts' to support pagination",
+        "Fetch only 10 deals at a time",
+        "Add 'Show More' inline button if more deals exist",
+        "Update 'src/bot/handlers/callbackHandler.ts' to handle 'page:<offset>' action",
+        "Clicking 'Show More' edits the message or sends next batch (per plan: edits/appends)",
+        "Show count text: 'Showing X-Y of Z deals'",
+        "Verify pagination works for <10, =10, and >10 deals"
+      ]
+    },
+    {
+      "id": "US-004",
+      "title": "Implement /cart Command",
+      "status": "open",
+      "dependsOn": ["US-002"],
+      "description": "As a user, I want to view my shopping cart so I can see what I plan to buy.",
+      "acceptanceCriteria": [
+        "Create 'src/bot/commands/cart.ts'",
+        "Register '/cart' command in 'src/bot/index.ts'",
+        "Fetch and display items in the cart",
+        "Show 'Shopping Cart (X items)' header",
+        "Show 'Empty Cart' message if no items",
+        "Add '🗑️ Remove' button for each item",
+        "Add '🧹 Clear Cart' button at the bottom",
+        "Handle 'clearcart' callback in 'src/bot/handlers/callbackHandler.ts'"
+      ]
+    },
+    {
+      "id": "US-005",
+      "title": "Deal Interaction Buttons",
+      "status": "open",
+      "dependsOn": ["US-002"],
+      "description": "As a user, I want to add/remove deals to/from my cart directly from the deal feed.",
+      "acceptanceCriteria": [
+        "Update 'src/bot/commands/deals.ts' deal message format",
+        "Add '🛒 Add to Cart' button to inline keyboard",
+        "If deal is already in cart, show '✅ In Cart' (or toggle button)",
+        "Update 'src/bot/handlers/callbackHandler.ts' to handle 'addcart:<id>' and 'remcart:<id>'",
+        "Ensure button state updates immediately upon clicking",
+        "Apply same button logic to Notification Service if applicable"
+      ]
+    },
+    {
+      "id": "US-006",
+      "title": "Cart Summary View",
+      "status": "open",
+      "dependsOn": ["US-004"],
+      "description": "As a user, I want a compact text summary of my cart for easy checking while shopping.",
+      "acceptanceCriteria": [
+        "Add '📋 Show Summary' button to '/cart' view",
+        "Implement 'handleCartSummary' in 'src/bot/commands/cart.ts'",
+        "Handle 'cartsummary' callback",
+        "Display text-only list: '1. Brand - Product - $Price'",
+        "Show Total Price at bottom",
+        "Add '⬅️ Back to Cart' button",
+        "Ensure long names are truncated to keep formatting clean"
+      ]
+    }
+  ]
+}
