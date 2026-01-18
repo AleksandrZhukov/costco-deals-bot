@@ -1,4 +1,4 @@
-import { eq, and, desc, count, or, isNull, sql } from "drizzle-orm";
+import { eq, and, desc, count, or, isNull } from "drizzle-orm";
 import { db } from "../config/database.js";
 import { createDbQueryTracker, getAllQueryFrequencies } from "../utils/logger.js";
 import {
@@ -168,6 +168,7 @@ export async function incrementProductFrequency(upc: string) {
 export async function createDeal(data: {
   dealId: number;
   productId: number;
+  storeId: number;
   currentPrice?: string;
   sourcePrice?: string;
   discountPrice?: string;
@@ -192,6 +193,7 @@ export async function getDealByDealId(dealId: number) {
 export async function updateDeal(
   dealId: number,
   data: {
+    storeId?: number;
     currentPrice?: string;
     sourcePrice?: string;
     discountPrice?: string;
@@ -353,7 +355,7 @@ export async function hasActiveDealsForStore(storeId: number): Promise<boolean> 
     .where(
       and(
         eq(deals.isActive, true),
-        sql`(${deals.rawData}->>'fk_store')::int = ${storeId}`
+        eq(deals.storeId, storeId)
       )
     );
 

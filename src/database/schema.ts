@@ -44,6 +44,7 @@ export const deals = pgTable(
     productId: integer("product_id")
       .notNull()
       .references(() => products.id, { onDelete: "cascade" }),
+    storeId: integer("store_id").notNull(),
     currentPrice: decimal("current_price", { precision: 10, scale: 2 }),
     sourcePrice: decimal("source_price", { precision: 10, scale: 2 }),
     discountPrice: decimal("discount_price", { precision: 10, scale: 2 }),
@@ -61,6 +62,7 @@ export const deals = pgTable(
   },
   (table) => ({
     productIdx: index("idx_deals_product").on(table.productId),
+    storeIdx: index("idx_deals_store").on(table.storeId),
     activeIdx: index("idx_deals_active").on(table.isActive),
     latestIdx: index("idx_deals_latest").on(table.isLatest),
     dealIdIdx: index("idx_deals_deal_id").on(table.dealId),
