@@ -80,8 +80,6 @@ export async function toggleFavorite(
   isFavorite: boolean
 ): Promise<void> {
   try {
-    await setDealFavorite(userId, dealId, isFavorite);
-
     if (isFavorite) {
       await bot.answerCallbackQuery(userId.toString(), {
         text: "⭐ Deal added to favorites!",
@@ -91,6 +89,8 @@ export async function toggleFavorite(
         text: "💔 Deal removed from favorites",
       });
     }
+
+    await setDealFavorite(userId, dealId, isFavorite);
   } catch (error) {
     console.error("Error toggling favorite:", error);
     await bot.answerCallbackQuery(userId.toString(), {

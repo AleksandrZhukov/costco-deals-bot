@@ -91,19 +91,19 @@ export async function handleCallbackQuery(
 
     case "hide":
       if (callbackData.dealId) {
-        await setDealHidden(userId, callbackData.dealId, true);
         await bot.answerCallbackQuery(queryId, {
           text: "👁️ Deal hidden",
         });
+        await setDealHidden(userId, callbackData.dealId, true);
       }
       break;
 
     case "unhide":
       if (callbackData.dealId) {
-        await setDealHidden(userId, callbackData.dealId, false);
         await bot.answerCallbackQuery(queryId, {
           text: "✅ Deal visible again",
         });
+        await setDealHidden(userId, callbackData.dealId, false);
       }
       break;
 

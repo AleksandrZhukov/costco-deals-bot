@@ -77,14 +77,11 @@ export async function handleStoreChange(
   storeId: number
 ): Promise<void> {
   try {
-    await updateUserStoreId(userId, storeId);
-
-    const storeName = AVAILABLE_STORES.find((s) => s.id === storeId)?.name || "Unknown";
-
     await bot.answerCallbackQuery(userId.toString(), {
-      text: `✅ Store changed to ${storeName}`,
+      text: `✅ Store changed`,
     });
 
+    await updateUserStoreId(userId, storeId);
     await handleSettingsCommand(bot, userId);
   } catch (error) {
     console.error("Error changing store:", error);
@@ -112,12 +109,11 @@ export async function handleToggleNotifications(
 
     const newStatus = !user.notificationsEnabled;
 
-    await updateUserNotifications(userId, newStatus);
-
     await bot.answerCallbackQuery(userId.toString(), {
       text: `Notifications ${newStatus ? "enabled" : "disabled"}`,
     });
 
+    await updateUserNotifications(userId, newStatus);
     await handleSettingsCommand(bot, userId);
   } catch (error) {
     console.error("Error toggling notifications:", error);
