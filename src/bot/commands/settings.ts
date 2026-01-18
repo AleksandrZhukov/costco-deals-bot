@@ -27,13 +27,13 @@ export async function handleSettingsCommand(
     }
 
     const storeName =
-      AVAILABLE_STORES.find((s) => s.id === user.storeId)?.name || "Unknown";
+      AVAILABLE_STORES.find((s) => s.id === user.storeId)?.name || "Not set";
     const notifStatus = user.notificationsEnabled ? "✅ Enabled" : "❌ Disabled";
 
     const message = `
 ⚙️ **Current Settings**
 
-🏪 **Store:** ${storeName} (ID: ${user.storeId})
+🏪 **Store:** ${storeName}${user.storeId ? ` (ID: ${user.storeId})` : ""}
 🔔 **Notifications:** ${notifStatus}
 
 Click the buttons below to change your settings:
@@ -41,10 +41,12 @@ Click the buttons below to change your settings:
 
     const keyboard = {
       inline_keyboard: [
-        AVAILABLE_STORES.map((store) => ({
-          text: `🏪 ${store.name}`,
-          callback_data: `set_store:${store.id}`,
-        })),
+        ...AVAILABLE_STORES.map((store) => [
+          {
+            text: `🏪 ${store.name}`,
+            callback_data: `set_store:${store.id}`,
+          },
+        ]),
         [
           {
             text: `🔔 Toggle Notifications (${

@@ -24,7 +24,7 @@ export async function createUser(data: {
       telegramId: data.telegramId,
       username: data.username,
       firstName: data.firstName,
-      storeId: data.storeId ?? 25,
+      storeId: data.storeId,
     })
     .returning();
   return user;

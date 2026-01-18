@@ -75,7 +75,7 @@ export const users = pgTable(
     telegramId: bigint("telegram_id", { mode: "number" }).notNull().unique(),
     username: text("username"),
     firstName: text("first_name"),
-    storeId: integer("store_id").notNull().default(25),
+    storeId: integer("store_id"),
     notificationsEnabled: boolean("notifications_enabled").default(true),
     createdAt: timestamp("created_at").defaultNow(),
     lastActiveAt: timestamp("last_active_at").defaultNow(),

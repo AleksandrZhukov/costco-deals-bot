@@ -18,7 +18,9 @@ export async function runDailyParse(options: ParseJobOptions = {}): Promise<void
 
   try {
     const allUsers = await getAllActiveUsers();
-    const uniqueStoreIds = new Set(allUsers.map((user) => user.storeId));
+    const uniqueStoreIds = new Set(
+      allUsers.map((user) => user.storeId).filter((id): id is number => id !== null)
+    );
 
     console.log(`Found ${uniqueStoreIds.size} unique store(s) to process`);
 
