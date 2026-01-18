@@ -4,7 +4,7 @@
 # Features: Auto-execute mode, dry-run, story filtering
 
 # Default configuration
-PRD_FILE="/Users/azhukov/projects/deal-bot/.agents/tasks/prd-axiom-logging.json"
+PRD_FILE=""  # No default - must be provided
 WORK_DONE_FILE="/Users/azhukov/projects/deal-bot/work_done.md"
 AUTO_EXECUTE=false
 DRY_RUN=false
@@ -15,7 +15,10 @@ show_help() {
   cat << EOF
 PRD Story Executor - Execute user stories from PRD JSON files
 
-Usage: $(basename "$0") [OPTIONS]
+Usage: $(basename "$0") -f PRD_FILE [OPTIONS]
+
+Required:
+  -f, --file PRD_FILE   Path to PRD JSON file
 
 Options:
   -y, --yes, --auto     Auto-execute all stories without confirmation
@@ -24,11 +27,11 @@ Options:
   -h, --help            Show this help message
 
 Examples:
-  $(basename "$0")                    # Interactive mode
-  $(basename "$0") --yes              # Auto-execute all stories
-  $(basename "$0") --dry-run          # Preview stories to execute
-  $(basename "$0") --story US-001     # Execute only story US-001
-  $(basename "$0") --yes --story US-002  # Auto-execute story US-002
+  $(basename "$0") -f prd-axiom-logging.json
+  $(basename "$0") --file prd-axiom-logging.json --yes
+  $(basename "$0") -f prd.json --dry-run
+  $(basename "$0") -f prd.json --story US-001
+  $(basename "$0") -f prd.json --yes --story US-002
 
 EOF
 }
@@ -36,6 +39,10 @@ EOF
 # Parse command-line arguments
 while [[ $# -gt 0 ]]; do
   case $1 in
+    -f|--file)
+      PRD_FILE="$2"
+      shift 2
+      ;;
     -y|--yes|--auto)
       AUTO_EXECUTE=true
       shift
@@ -59,6 +66,14 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+# Check if PRD file parameter was provided
+if [ -z "$PRD_FILE" ]; then
+  echo "Error: PRD file is required"
+  echo ""
+  show_help
+  exit 1
+fi
 
 # Derive log file path from PRD file (same directory, .log extension)
 PRD_DIR=$(dirname "$PRD_FILE")
