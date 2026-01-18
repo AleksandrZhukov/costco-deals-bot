@@ -2,6 +2,8 @@ import type TelegramBot from "node-telegram-bot-api";
 import { toggleFavorite } from "../commands/favorites.js";
 import { setDealHidden } from "../../database/queries.js";
 import { handleStoreChange, handleToggleNotifications } from "../commands/settings.js";
+import { createUserActionTracker } from "../../utils/logger.js";
+import { logError } from "../../utils/errorLogger.js";
 
 export interface CallbackData {
   action: string;
@@ -60,12 +62,21 @@ export async function handleCallbackQuery(
   const callbackData = parseCallbackData(data);
 
   if (!callbackData) {
+    const tracker = createUserActionTracker(userId);
     await bot.answerCallbackQuery(callbackQueryId, {
       text: "❌ Invalid action",
       show_alert: true,
     });
+    logError(new Error(`Invalid callback data: ${data}`), {
+      error_type: 'error.validation',
+      user_id: userId,
+      callback_data: data,
+    });
+    tracker.callback('invalid', { callback_data: data });
     return;
   }
+
+  const tracker = createUserActionTracker(userId);
 
   switch (callbackData.action) {
     case "favorite":
@@ -86,6 +97,7 @@ export async function handleCallbackQuery(
           text: "👁️ Deal hidden",
         });
         await setDealHidden(userId, callbackData.dealId, true);
+        tracker.callback('hide', { deal_id: String(callbackData.dealId) });
       }
       break;
 
@@ -95,6 +107,7 @@ export async function handleCallbackQuery(
           text: "✅ Deal visible again",
         });
         await setDealHidden(userId, callbackData.dealId, false);
+        tracker.callback('unhide', { deal_id: String(callbackData.dealId) });
       }
       break;
 
@@ -113,5 +126,11 @@ export async function handleCallbackQuery(
         text: "❌ Unknown action",
         show_alert: true,
       });
+      logError(new Error(`Unknown callback action: ${callbackData.action}`), {
+        error_type: 'error.validation',
+        user_id: userId,
+        callback_action: callbackData.action,
+      });
+      tracker.callback('unknown', { callback_action: callbackData.action });
   }
 }

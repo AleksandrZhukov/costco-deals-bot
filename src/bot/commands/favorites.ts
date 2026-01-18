@@ -2,11 +2,14 @@ import type TelegramBot from "node-telegram-bot-api";
 import { getUserFavoriteDeals } from "../../database/queries.js";
 import { setDealFavorite } from "../../database/queries.js";
 import { formatDealMessage } from "../../utils/formatters.js";
+import { createUserActionTracker } from "../../utils/logger.js";
 
 export async function handleFavoritesCommand(
   bot: TelegramBot,
   chatId: number
 ): Promise<void> {
+  const tracker = createUserActionTracker(chatId);
+
   try {
     await bot.sendMessage(chatId, "⭐ Fetching your favorites...");
 
@@ -18,6 +21,10 @@ export async function handleFavoritesCommand(
 
     if (!activeFavorites || activeFavorites.length === 0) {
       await bot.sendMessage(chatId, "You don't have any favorited deals yet.");
+      tracker.command('favorites', {
+        favorites_count: 0,
+        active_favorites: 0,
+      });
       return;
     }
 
@@ -64,6 +71,11 @@ export async function handleFavoritesCommand(
 
       await new Promise((resolve) => setTimeout(resolve, 300));
     }
+
+    tracker.command('favorites', {
+      favorites_count: userFavorites.length,
+      active_favorites: activeFavorites.length,
+    });
   } catch (error) {
     console.error("Error in /favorites command:", error);
     await bot.sendMessage(
@@ -80,6 +92,8 @@ export async function toggleFavorite(
   dealId: number,
   isFavorite: boolean
 ): Promise<void> {
+  const tracker = createUserActionTracker(userId);
+
   try {
     if (isFavorite) {
       await bot.answerCallbackQuery(callbackQueryId, {
@@ -92,6 +106,10 @@ export async function toggleFavorite(
     }
 
     await setDealFavorite(userId, dealId, isFavorite);
+
+    tracker.callback(isFavorite ? 'favorite' : 'unfavorite', {
+      deal_id: String(dealId),
+    });
   } catch (error) {
     console.error("Error toggling favorite:", error);
     await bot.answerCallbackQuery(callbackQueryId, {

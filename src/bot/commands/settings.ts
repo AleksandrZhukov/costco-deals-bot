@@ -2,6 +2,7 @@ import type TelegramBot from "node-telegram-bot-api";
 import { getUserByTelegramId } from "../../database/queries.js";
 import { updateUserStoreId } from "../../database/queries.js";
 import { updateUserNotifications } from "../../database/queries.js";
+import { createUserActionTracker } from "../../utils/logger.js";
 
 const AVAILABLE_STORES = [
   { id: 25, name: "Calgary, AB" },
@@ -18,6 +19,8 @@ export async function handleSettingsCommand(
   bot: TelegramBot,
   chatId: number
 ): Promise<void> {
+  const tracker = createUserActionTracker(chatId);
+
   try {
     const user = await getUserByTelegramId(chatId);
 
@@ -26,6 +29,9 @@ export async function handleSettingsCommand(
         chatId,
         "❌ User not found. Please use /start to initialize your account."
       );
+      tracker.command('settings', {
+        user_found: false,
+      });
       return;
     }
 
@@ -62,6 +68,12 @@ Click the buttons below to change your settings:
     };
 
     await bot.sendMessage(chatId, message, { reply_markup: keyboard });
+
+    tracker.command('settings', {
+      user_found: true,
+      store_id: user.storeId,
+      notifications_enabled: user.notificationsEnabled,
+    });
   } catch (error) {
     console.error("Error in /settings command:", error);
     await bot.sendMessage(
@@ -77,13 +89,27 @@ export async function handleStoreChange(
   userId: number,
   storeId: number
 ): Promise<void> {
+  const tracker = createUserActionTracker(userId);
+
   try {
+    const user = await getUserByTelegramId(userId);
+
+    if (!user) {
+      await bot.answerCallbackQuery(callbackQueryId, {
+        text: "❌ User not found",
+        show_alert: true,
+      });
+      return;
+    }
+
     await bot.answerCallbackQuery(callbackQueryId, {
       text: `✅ Store changed`,
     });
 
     await updateUserStoreId(userId, storeId);
     await handleSettingsCommand(bot, userId);
+
+    tracker.settingsChanged('store', user.storeId, storeId);
   } catch (error) {
     console.error("Error changing store:", error);
     await bot.answerCallbackQuery(callbackQueryId, {
@@ -98,6 +124,8 @@ export async function handleToggleNotifications(
   callbackQueryId: string,
   userId: number
 ): Promise<void> {
+  const tracker = createUserActionTracker(userId);
+
   try {
     const user = await getUserByTelegramId(userId);
 
@@ -117,6 +145,8 @@ export async function handleToggleNotifications(
 
     await updateUserNotifications(userId, newStatus);
     await handleSettingsCommand(bot, userId);
+
+    tracker.settingsChanged('notifications', user.notificationsEnabled, newStatus);
   } catch (error) {
     console.error("Error toggling notifications:", error);
     await bot.answerCallbackQuery(callbackQueryId, {

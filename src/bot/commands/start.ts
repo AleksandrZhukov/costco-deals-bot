@@ -1,5 +1,6 @@
 import type TelegramBot from "node-telegram-bot-api";
 import { createUser, getUserByTelegramId } from "../../database/queries.js";
+import { createUserActionTracker } from "../../utils/logger.js";
 
 const WELCOME_MESSAGE = `
 🎉 Welcome to YEP Savings Deal Bot!
@@ -32,6 +33,8 @@ export async function handleStartCommand(
   username?: string,
   firstName?: string
 ): Promise<void> {
+  const tracker = createUserActionTracker(chatId);
+
   try {
     const existingUser = await getUserByTelegramId(chatId);
 
@@ -41,10 +44,17 @@ export async function handleStartCommand(
         username,
         firstName,
       });
+      tracker.created();
     }
 
     await bot.sendMessage(chatId, WELCOME_MESSAGE);
     await bot.sendMessage(chatId, COMMANDS_LIST);
+
+    tracker.command('start', {
+      existing_user: !!existingUser,
+      username,
+      first_name: firstName,
+    });
   } catch (error) {
     console.error("Error in /start command:", error);
     await bot.sendMessage(

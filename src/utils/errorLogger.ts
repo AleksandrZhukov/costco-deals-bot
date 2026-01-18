@@ -7,6 +7,7 @@ type ErrorLoggingContext = EventContext & {
   error_code?: string;
   fn_name?: string;
   query_name?: string;
+  callback_data?: string;
 };
 
 export function logError(
