@@ -1,4 +1,4 @@
-import { bot } from "../config/telegram.js";
+import { bot, isWebhookMode } from "../config/telegram.js";
 import { handleStartCommand } from "./commands/start.js";
 import { handleDealsCommand } from "./commands/deals.js";
 import { handleFavoritesCommand } from "./commands/favorites.js";
@@ -42,9 +42,11 @@ export function setupBotHandlers(): void {
     }
   });
 
-  bot.on("polling_error", (error) => {
-    console.error("Polling error:", error);
-  });
+  if (!isWebhookMode) {
+    bot.on("polling_error", (error) => {
+      console.error("Polling error:", error);
+    });
+  }
 
   console.log("✅ Bot handlers registered");
 }

@@ -10,6 +10,7 @@ export const env = createEnv({
 
     // Telegram Bot
     TELEGRAM_BOT_TOKEN: z.string().min(1),
+    WEBHOOK_URL: z.string().url().default("https://costco-deals-bot.onrender.com"),
 
     // YEP Savings API
     YEP_API_BASE_URL: z.string().url().default("https://yepsavings.com"),
