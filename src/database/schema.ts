@@ -121,6 +121,28 @@ export const notificationLog = pgTable("notification_log", {
   wasSuccessful: boolean("was_successful"),
 });
 
+// User shopping cart table
+export const userShoppingCart = pgTable(
+  "user_shopping_cart",
+  {
+    id: serial("id").primaryKey(),
+    userTelegramId: bigint("user_telegram_id", { mode: "number" }).notNull(),
+    dealId: integer("deal_id")
+      .notNull()
+      .references(() => deals.id, { onDelete: "cascade" }),
+    addedAt: timestamp("added_at").defaultNow(),
+  },
+  (table) => ({
+    uniqueUserDeal: unique("unique_user_deal_cart").on(
+      table.userTelegramId,
+      table.dealId
+    ),
+    userIdx: index("idx_shopping_cart_user").on(table.userTelegramId),
+    dealIdx: index("idx_shopping_cart_deal").on(table.dealId),
+    addedAtIdx: index("idx_shopping_cart_added_at").on(table.addedAt),
+  })
+);
+
 // Relations
 export const productsRelations = relations(products, ({ many }) => ({
   deals: many(deals),
@@ -133,6 +155,7 @@ export const dealsRelations = relations(deals, ({ one, many }) => ({
   }),
   userPreferences: many(userDealPreferences),
   notifications: many(notificationLog),
+  shoppingCartItems: many(userShoppingCart),
 }));
 
 export const userDealPreferencesRelations = relations(
@@ -150,6 +173,16 @@ export const notificationLogRelations = relations(
   ({ one }) => ({
     deal: one(deals, {
       fields: [notificationLog.dealId],
+      references: [deals.id],
+    }),
+  })
+);
+
+export const userShoppingCartRelations = relations(
+  userShoppingCart,
+  ({ one }) => ({
+    deal: one(deals, {
+      fields: [userShoppingCart.dealId],
       references: [deals.id],
     }),
   })
