@@ -156,7 +156,7 @@
     {
       "id": "US-005",
       "title": "API Call Logging",
-      "status": "open",
+      "status": "completed",
       "dependsOn": [
         "US-003"
       ],
@@ -167,7 +167,9 @@
         "Log API errors with error details, retry attempts, correlation ID",
         "Example: successful API call logs endpoint, duration, deal count parsed",
         "Negative case: API timeout should log error with timeout duration"
-      ]
+      ],
+      "completedAt": "2026-01-18T19:48:06Z",
+      "updatedAt": "2026-01-18T19:48:06Z"
     },
     {
       "id": "US-006",
