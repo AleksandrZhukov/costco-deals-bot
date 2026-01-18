@@ -353,3 +353,64 @@ All commands functional with interactive buttons. User preferences working. All 
 Docker image builds successfully. Container runs with docker-compose. Health checks configured. All type checks and build pass. Ready for Phase 11.
 
 ---
+
+## Phase 11: Message Format Improvements ✅
+**Commit:** `fd75d88` | **Date:** Jan 18, 2026
+
+### Completed
+- ✅ Updated `src/utils/formatters.ts` deal message format:
+  - New format with emojis: 🏷️, 💰, 💵, 📉, ⏰
+  - Brand and product name combined in title line
+  - Discount price with percentage in same line
+  - Separate lines for Original and Current prices
+  - Days left with formatted date
+  - Hide zero-value prices (N/A or $0.00)
+- ✅ Enhanced `formatPrice()` to return "N/A" for zero values
+- ✅ Simplified message structure for better readability
+
+### Files Modified
+- `src/utils/formatters.ts` - Complete rewrite of formatDealMessage function
+
+### Status
+Deal messages now use improved emoji-based format. Zero prices hidden automatically. All type checks pass. Ready for Phase 12.
+
+---
+
+## Phase 12: External Scheduling Integration ✅
+**Commit:** `a27bbe0` | **Date:** Jan 18, 2026
+
+### Completed
+- ✅ Removed internal node-cron scheduler:
+  - Deleted `scheduleDailyParse()` and `startScheduler()` functions
+  - Removed cron import from `src/schedulers/dailyParser.ts`
+- ✅ Replaced cron with HTTP endpoints for external scheduling:
+  - Added `GET /health` endpoint for keep-alive (call every 14min)
+  - Added `GET /daily-parse` endpoint for daily deal refresh
+  - Endpoints integrated into existing health check server on port 3000
+- ✅ Updated `src/index.ts`:
+  - Health check server now async for /daily-parse endpoint
+  - /daily-parse endpoint runs `runDailyParse({ manual: true })`
+  - Returns JSON response with status and message
+  - Error handling with 500 status code on failures
+  - Removed scheduler initialization
+  - Added endpoint logging on startup
+- ✅ Cleaned up environment configuration:
+  - Removed `DAILY_PARSE_SCHEDULE` from `src/config/env.ts`
+  - Removed `TIMEZONE` from `src/config/env.ts`
+  - Updated `.env.example` to remove deprecated variables
+- ✅ Removed dependencies:
+  - `node-cron` from package.json dependencies
+  - `@types/node-cron` from package.json devDependencies
+
+### Files Modified
+- `src/schedulers/dailyParser.ts` - Removed cron scheduling functions (56 lines deleted)
+- `src/index.ts` - Added HTTP endpoints, removed scheduler initialization
+- `src/config/env.ts` - Removed DAILY_PARSE_SCHEDULE and TIMEZONE
+- `package.json` - Removed node-cron dependencies
+- `.env.example` - Removed scheduling environment variables
+
+### Status
+Cron job replaced with HTTP endpoints. Ready for external cron-job.org scheduling. All type checks pass. Deployment ready.
+
+---
+
