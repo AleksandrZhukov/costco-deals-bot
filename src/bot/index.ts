@@ -19,10 +19,7 @@ export function setupBotHandlers(): void {
 
   bot.onText(/\/deals/, async (msg) => {
     const chatId = msg.chat.id;
-    const { getUserByTelegramId } = await import("../database/queries.js");
-    const user = await getUserByTelegramId(chatId);
-    const storeId = user?.storeId ?? 25;
-    await handleDealsCommand(bot, chatId, storeId);
+    await handleDealsCommand(bot, chatId, 0);
   });
 
   bot.onText(/\/favorites/, async (msg) => {

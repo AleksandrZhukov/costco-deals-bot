@@ -283,7 +283,10 @@ export async function getTotalActiveDealsCount(_storeId?: number, _userId?: numb
 
 export async function getTotalVisibleActiveDealsCount(userTelegramId: number) {
   const user = await getUserByTelegramId(userTelegramId);
-  const storeId = user?.storeId ?? 25;
+
+  if (!user?.storeId) {
+    return 0;
+  }
 
   const result = await db
     .select({ count: count() })
@@ -294,7 +297,7 @@ export async function getTotalVisibleActiveDealsCount(userTelegramId: number) {
     ))
     .where(and(
       eq(deals.isActive, true),
-      eq(deals.storeId, storeId),
+      eq(deals.storeId, user.storeId),
       or(
         isNull(userDealPreferences.id),
         eq(userDealPreferences.isHidden, false)
@@ -310,7 +313,10 @@ export async function getActiveDealsWithProductsNotHidden(
   offset?: number
 ) {
   const user = await getUserByTelegramId(userTelegramId);
-  const storeId = user?.storeId ?? 25;
+
+  if (!user?.storeId) {
+    return [];
+  }
 
   const query = db
     .select()
@@ -322,7 +328,7 @@ export async function getActiveDealsWithProductsNotHidden(
     ))
     .where(and(
       eq(deals.isActive, true),
-      eq(deals.storeId, storeId),
+      eq(deals.storeId, user.storeId),
       or(
         isNull(userDealPreferences.id),
         eq(userDealPreferences.isHidden, false)

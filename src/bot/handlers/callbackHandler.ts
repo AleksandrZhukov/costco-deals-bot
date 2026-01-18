@@ -265,8 +265,11 @@ export async function handleCallbackQuery(
         await bot.answerCallbackQuery(callbackQueryId);
         const { getUserByTelegramId } = await import("../../database/queries.js");
         const user = await getUserByTelegramId(userId);
-        const storeId = user?.storeId ?? 25;
-        await handlePagination(bot, userId, storeId, callbackData.offset);
+        if (!user?.storeId) {
+          await bot.sendMessage(userId, "Please configure your store in settings to view deals.");
+          return;
+        }
+        await handlePagination(bot, userId, user.storeId, callbackData.offset);
         tracker.callback('page', { offset: String(callbackData.offset) });
       }
       break;
