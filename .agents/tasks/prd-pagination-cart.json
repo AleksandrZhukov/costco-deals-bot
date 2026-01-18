@@ -87,7 +87,7 @@
     {
       "id": "US-002",
       "title": "Database Queries for Cart & Pagination",
-      "status": "open",
+      "status": "completed",
       "dependsOn": [
         "US-001"
       ],
@@ -102,7 +102,9 @@
         "Update 'getActiveDealsWithProducts' to accept 'limit' and 'offset'",
         "Implement 'getTotalActiveDealsCount(storeId, userId)'",
         "Ensure all functions are typed correctly"
-      ]
+      ],
+      "completedAt": "2026-01-18T22:01:48Z",
+      "updatedAt": "2026-01-18T22:01:48Z"
     },
     {
       "id": "US-003",
