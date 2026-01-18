@@ -1,0 +1,25 @@
+{
+  "name": "High Error Rate Alert",
+  "description": "Alert when error rate exceeds 5% in 5 minutes",
+  "enabled": true,
+  "dataset": "costco-deals-bot",
+  "query": "costco-deals-bot\n| where event_type in [\"error.unhandled\", \"error.validation\", \"error.network\", \"error.database\"]\n  and _time > now() - 5m\n| summarize error_count = count(), total_count = count()\n| where error_count > 10",
+  "condition": "error_count > 10",
+  "threshold": {
+    "type": "absolute",
+    "value": 10,
+    "operator": "greater_than"
+  },
+  "window": "5m",
+  "evaluation": "every 1m",
+  "notification": {
+    "channels": ["email", "slack"],
+    "message": "High error rate detected: {{error_count}} errors in the last 5 minutes. Check Axiom for details.",
+    "severity": "critical"
+  },
+  "recovery": {
+    "enabled": true,
+    "message": "Error rate has returned to normal levels.",
+    "window": "10m"
+  }
+}

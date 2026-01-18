@@ -1,0 +1,97 @@
+{
+  "name": "Performance Dashboard",
+  "description": "Performance metrics: API latency, processing time, database queries",
+  "dataset": "costco-deals-bot",
+  "queries": [
+    {
+      "title": "API Response Times (p50, p95, p99)",
+      "type": "line",
+      "query": "costco-deals-bot\n| where event_type == \"yep.api.success\"\n| summarize\n    p50(duration_ms),\n    p95(duration_ms),\n    p99(duration_ms)",
+      "visualization": {
+        "series": ["p50_duration_ms", "p95_duration_ms", "p99_duration_ms"],
+        "label": "Response Time (ms)"
+      }
+    },
+    {
+      "title": "API Response Time Trend (Last Hour)",
+      "type": "line",
+      "query": "costco-deals-bot\n| where event_type == \"yep.api.success\"\n  and _time > now() - 1h\n| bin _time 5m\n| summarize avg(duration_ms), p95(duration_ms) by _time",
+      "visualization": {
+        "xAxis": "_time",
+        "yAxis": ["avg_duration_ms", "p95_duration_ms"]
+      }
+    },
+    {
+      "title": "Deal Processing Duration Distribution",
+      "type": "line",
+      "query": "costco-deals-bot\n| where event_type == \"deal.processed\"\n| summarize\n    avg(processing_duration_ms),\n    p50(processing_duration_ms),\n    p95(processing_duration_ms),\n    p99(processing_duration_ms)",
+      "visualization": {
+        "series": ["avg_processing_duration_ms", "p50_processing_duration_ms", "p95_processing_duration_ms", "p99_processing_duration_ms"],
+        "label": "Processing Duration (ms)"
+      }
+    },
+    {
+      "title": "Slow Individual Deal Processing (>1 second)",
+      "type": "table",
+      "query": "costco-deals-bot\n| where event_type == \"deal.processed\"\n  and processing_duration_ms > 1000\n| project deal_id, store_id, processing_duration_ms, _time\n| sort by processing_duration_ms desc\n| limit 20",
+      "visualization": {
+        "columns": ["_time", "deal_id", "store_id", "processing_duration_ms"]
+      }
+    },
+    {
+      "title": "Database Query Times",
+      "type": "line",
+      "query": "costco-deals-bot\n| where event_type == \"db.query\"\n| summarize\n    avg(duration_ms),\n    p50(duration_ms),\n    p95(duration_ms),\n    p99(duration_ms)",
+      "visualization": {
+        "series": ["avg_duration_ms", "p50_duration_ms", "p95_duration_ms", "p99_duration_ms"],
+        "label": "Query Duration (ms)"
+      }
+    },
+    {
+      "title": "Slow Queries (>1 second)",
+      "type": "table",
+      "query": "costco-deals-bot\n| where event_type == \"db.query\"\n  and slow_query == true\n  and duration_ms > 1000\n| project _time, query_name, duration_ms, threshold_ms\n| sort by duration_ms desc\n| limit 20",
+      "visualization": {
+        "columns": ["_time", "query_name", "duration_ms", "threshold_ms"]
+      }
+    },
+    {
+      "title": "Most Frequent Slow Queries",
+      "type": "table",
+      "query": "costco-deals-bot\n| where event_type == \"db.query\"\n  and slow_query == true\n| summarize count(), avg(duration_ms) by query_name\n| sort by count desc\n| limit 10",
+      "visualization": {
+        "columns": ["query_name", "count", "avg_duration_ms"]
+      }
+    },
+    {
+      "title": "Job Execution Duration",
+      "type": "line",
+      "query": "costco-deals-bot\n| where event_type == \"job.daily_parse.complete\"\n| bin _time 1d\n| summarize avg(duration_ms), p95(duration_ms) by _time\n| sort by _time desc",
+      "visualization": {
+        "xAxis": "_time",
+        "yAxis": ["avg_duration_ms", "p95_duration_ms"],
+        "label": "Duration (ms)"
+      }
+    },
+    {
+      "title": "Notification Performance",
+      "type": "line",
+      "query": "costco-deals-bot\n| where event_type == \"notification.batch_complete\"\n| summarize\n    avg(duration_ms),\n    min(duration_ms),\n    max(duration_ms)",
+      "visualization": {
+        "series": ["avg_duration_ms", "min_duration_ms", "max_duration_ms"],
+        "label": "Duration (ms)"
+      }
+    },
+    {
+      "title": "Log Volume Over Time",
+      "type": "line",
+      "query": "costco-deals-bot\n| bin _time 1h\n| summarize count() by _time\n| sort by _time desc",
+      "visualization": {
+        "xAxis": "_time",
+        "yAxis": "count",
+        "label": "Events per Hour"
+      }
+    }
+  ],
+  "refresh": "2m"
+}

@@ -1,0 +1,25 @@
+{
+  "name": "API Failure Rate Alert",
+  "description": "Alert when API failure rate exceeds 10% in 1 minute",
+  "enabled": true,
+  "dataset": "costco-deals-bot",
+  "query": "costco-deals-bot\n| where event_type in [\"yep.api.success\", \"yep.api.error\"]\n  and _time > now() - 1m\n| summarize success = count_if(event_type == \"yep.api.success\"), errors = count_if(event_type == \"yep.api.error\"), total = count()\n| where errors > 0 and errors / total * 100 > 10",
+  "condition": "failure_rate > 10",
+  "threshold": {
+    "type": "absolute",
+    "value": 10,
+    "operator": "greater_than"
+  },
+  "window": "1m",
+  "evaluation": "every 30s",
+  "notification": {
+    "channels": ["email", "slack"],
+    "message": "High API failure rate: {{failure_rate}}% ({{errors}}/{{total}} failed) in the last minute",
+    "severity": "critical"
+  },
+  "recovery": {
+    "enabled": true,
+    "message": "API failure rate has returned to normal levels.",
+    "window": "5m"
+  }
+}

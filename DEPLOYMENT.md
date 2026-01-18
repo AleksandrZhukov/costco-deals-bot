@@ -120,11 +120,11 @@ Check logs in Axiom:
    - `yep.api.success`
    - `deal.processed`
 
-### 6. Optional: Configure Dataset Settings
+### 6. Configure Dataset Settings
 
 Navigate to your dataset → **Settings**:
 
-- **Retention**: Set to 30 days (free tier default)
+- **Retention**: Set to **7 days hot, 30 days warm**
 - **Field Types**: Axiom auto-detects, but you can manually configure if needed
   - `event_type`: string
   - `user_id`: number
@@ -132,56 +132,40 @@ Navigate to your dataset → **Settings**:
   - `deal_id`: string
   - `success`: boolean
 
-### 7. Create Dashboards (Optional)
+### 7. Create Dashboards and Alerts
 
-See [docs/AXIOM_QUERIES.md](./docs/AXIOM_QUERIES.md) for dashboard query examples.
+See [docs/AXIOM_SETUP.md](./docs/AXIOM_SETUP.md) for comprehensive setup guide.
 
-**Recommended Dashboards**:
+**Quick Summary**:
+- Pre-configured dashboard definitions: `docs/axiom/*.json`
+- Alert configurations: `docs/axiom/alerts/*.json`
+- Set up notification channels (email, Slack) for alerts
 
-#### Operations Dashboard
-- Error rate over time
-- API success/failure ratio
-- Job execution status
-- Notification success rate
+**Dashboards Included**:
+1. **Operations Dashboard** - Real-time system health (refresh: 1m)
+2. **Business Metrics Dashboard** - KPIs and engagement (refresh: 5m)
+3. **Performance Dashboard** - Latency and bottlenecks (refresh: 2m)
 
-#### Business Metrics Dashboard
-- Deals processed per day
-- New deals detected per day
-- Notifications sent per day
-- Top stores by activity
+**Alerts Included**:
+1. **High Error Rate Alert** - >10 errors in 5 minutes
+2. **API Latency Alert** - >5 slow requests (>1s) in 5 minutes
+3. **Job Failure Alert** - Any job failure
+4. **Notification Failure Rate Alert** - >50% failed in 10 minutes
+5. **API Failure Rate Alert** - >10% failures in 1 minute
 
-#### Performance Dashboard
-- API response times (p50, p95, p99)
-- Deal processing duration
-- Database query times
+### 8. Set Up Alert Notification Channels
 
-### 8. Set Up Alerts (Optional)
+Configure where alerts are sent:
 
-Create alerts for critical issues:
+1. **Email Notifications**:
+   - Go to **Settings** → **Notification Channels**
+   - Add **Email** channel
+   - Add team email addresses
 
-**High Error Rate Alert**:
-```
-dataset: costco-deals-bot
-query: | where event_type in ["error.unhandled", "error.validation", "error.network", "error.database"] | count()
-condition: count > 10
-window: 5 minutes
-```
-
-**API Failure Alert**:
-```
-dataset: costco-deals-bot
-query: | where event_type == "yep.api.error" | count()
-condition: count > 5
-window: 1 minute
-```
-
-**Job Failure Alert**:
-```
-dataset: costco-deals-bot
-query: | where event_type == "job.daily_parse.error"
-condition: count > 0
-window: 5 minutes
-```
+2. **Slack Notifications** (optional):
+   - Create Slack incoming webhook
+   - Add **Slack** channel in Axiom
+   - Paste webhook URL
 
 ### Troubleshooting Axiom Setup
 

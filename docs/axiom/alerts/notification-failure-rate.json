@@ -1,0 +1,25 @@
+{
+  "name": "Notification Failure Rate Alert",
+  "description": "Alert when notification failure rate exceeds 50% in 10 minutes",
+  "enabled": true,
+  "dataset": "costco-deals-bot",
+  "query": "costco-deals-bot\n| where event_type == \"notification.batch_complete\"\n  and failure_count / total_notifications > 0.5\n  and _time > now() - 10m\n| project _time, total_notifications, success_count, failure_count, failure_rate = failure_count / total_notifications * 100",
+  "condition": "failure_rate > 50",
+  "threshold": {
+    "type": "absolute",
+    "value": 50,
+    "operator": "greater_than"
+  },
+  "window": "10m",
+  "evaluation": "every 2m",
+  "notification": {
+    "channels": ["email", "slack"],
+    "message": "High notification failure rate: {{failure_rate}}% ({{failure_count}}/{{total_notifications}} failed)",
+    "severity": "warning"
+  },
+  "recovery": {
+    "enabled": true,
+    "message": "Notification failure rate has returned to normal levels.",
+    "window": "15m"
+  }
+}

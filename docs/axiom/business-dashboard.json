@@ -1,0 +1,99 @@
+{
+  "name": "Business Metrics Dashboard",
+  "description": "Business KPIs: deals, notifications, user activity",
+  "dataset": "costco-deals-bot",
+  "queries": [
+    {
+      "title": "Deals Processed Per Day",
+      "type": "line",
+      "query": "costco-deals-bot\n| where event_type == \"processing.batch_complete\"\n| bin _time 1d\n| summarize sum(deals_processed) by _time\n| sort by _time desc",
+      "visualization": {
+        "xAxis": "_time",
+        "yAxis": "sum_deals_processed",
+        "label": "Deals Processed"
+      }
+    },
+    {
+      "title": "New Deals Detected Per Day",
+      "type": "line",
+      "query": "costco-deals-bot\n| where event_type == \"deal.processed\"\n  and created == true\n| bin _time 1d\n| summarize count() by _time\n| sort by _time desc",
+      "visualization": {
+        "xAxis": "_time",
+        "yAxis": "count",
+        "label": "New Deals"
+      }
+    },
+    {
+      "title": "Notifications Sent Per Day",
+      "type": "line",
+      "query": "costco-deals-bot\n| where event_type == \"notification.sent\"\n| bin _time 1d\n| summarize count() by _time\n| sort by _time desc",
+      "visualization": {
+        "xAxis": "_time",
+        "yAxis": "count",
+        "label": "Notifications Sent"
+      }
+    },
+    {
+      "title": "Top Stores by Activity",
+      "type": "bar",
+      "query": "costco-deals-bot\n| where event_type == \"processing.batch_complete\"\n| summarize sum(deals_processed) by store_id\n| sort by sum desc\n| limit 10",
+      "visualization": {
+        "xAxis": "store_id",
+        "yAxis": "sum_deals_processed"
+      }
+    },
+    {
+      "title": "User Command Distribution",
+      "type": "pie",
+      "query": "costco-deals-bot\n| where event_type == \"user.command\"\n| summarize count() by command\n| sort by count desc",
+      "visualization": {
+        "series": "command"
+      }
+    },
+    {
+      "title": "Most Active Users (Last 24h)",
+      "type": "table",
+      "query": "costco-deals-bot\n| where event_type in [\"user.command\", \"user.callback\"]\n  and _time > now() - 24h\n| summarize count() by user_id\n| sort by count desc\n| limit 20",
+      "visualization": {
+        "columns": ["user_id", "count"]
+      }
+    },
+    {
+      "title": "Users by Store Preference",
+      "type": "bar",
+      "query": "costco-deals-bot\n| where event_type == \"user.command\"\n| summarize count_distinct(user_id) by store_id\n| sort by count_distinct desc\n| limit 10",
+      "visualization": {
+        "xAxis": "store_id",
+        "yAxis": "count_distinct_user_id",
+        "label": "Unique Users"
+      }
+    },
+    {
+      "title": "New Users Today",
+      "type": "table",
+      "query": "costco-deals-bot\n| where event_type == \"user.created\"\n  and _time > now() - 1d\n| project user_id, _time\n| sort by _time desc",
+      "visualization": {
+        "columns": ["_time", "user_id"]
+      }
+    },
+    {
+      "title": "Batch Notification Success Rate",
+      "type": "line",
+      "query": "costco-deals-bot\n| where event_type == \"notification.batch_complete\"\n| bin _time 1d\n| project _time, success_rate = success_count / total_notifications * 100",
+      "visualization": {
+        "xAxis": "_time",
+        "yAxis": "success_rate",
+        "label": "Success Rate %"
+      }
+    },
+    {
+      "title": "Deals with High Discount (>50%)",
+      "type": "table",
+      "query": "costco-deals-bot\n| where event_type == \"deal.processed\"\n  and discount_percentage > 50\n| project deal_id, store_id, discount_percentage, current_price, _time\n| sort by discount_percentage desc\n| limit 20",
+      "visualization": {
+        "columns": ["_time", "deal_id", "store_id", "discount_percentage", "current_price"]
+      }
+    }
+  ],
+  "refresh": "5m"
+}

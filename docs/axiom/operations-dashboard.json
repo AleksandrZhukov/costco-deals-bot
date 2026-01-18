@@ -1,0 +1,88 @@
+{
+  "name": "Operations Dashboard",
+  "description": "Real-time system health and operational metrics",
+  "dataset": "costco-deals-bot",
+  "queries": [
+    {
+      "title": "Error Rate Over Time",
+      "type": "line",
+      "query": "costco-deals-bot\n| where event_type in [\"error.unhandled\", \"error.validation\", \"error.network\", \"error.database\"]\n| bin _time 5m\n| summarize count() by _time, event_type",
+      "visualization": {
+        "xAxis": "_time",
+        "yAxis": "count",
+        "series": "event_type"
+      }
+    },
+    {
+      "title": "API Success/Failure Ratio",
+      "type": "bar",
+      "query": "costco-deals-bot\n| where event_type in [\"yep.api.success\", \"yep.api.error\"]\n| summarize count() by event_type",
+      "visualization": {
+        "xAxis": "event_type",
+        "yAxis": "count"
+      }
+    },
+    {
+      "title": "API Response Time Trend (Last Hour)",
+      "type": "line",
+      "query": "costco-deals-bot\n| where event_type == \"yep.api.success\"\n  and _time > now() - 1h\n| bin _time 5m\n| summarize avg(duration_ms) by _time",
+      "visualization": {
+        "xAxis": "_time",
+        "yAxis": "avg_duration_ms",
+        "label": "Average Response Time (ms)"
+      }
+    },
+    {
+      "title": "Recent Errors",
+      "type": "table",
+      "query": "costco-deals-bot\n| where event_type in [\"error.unhandled\", \"error.validation\", \"error.network\", \"error.database\"]\n| sort by _time desc\n| limit 50\n| project _time, event_type, error_message, user_id, store_id",
+      "visualization": {
+        "columns": ["_time", "event_type", "error_message", "user_id", "store_id"]
+      }
+    },
+    {
+      "title": "Job Execution History",
+      "type": "table",
+      "query": "costco-deals-bot\n| where event_type =~ \"job.daily_parse.*\"\n| sort by _time desc\n| limit 20\n| project _time, event_type, stores_count, deals_processed, new_deals_found, notifications_sent, duration_ms",
+      "visualization": {
+        "columns": ["_time", "event_type", "stores_count", "deals_processed", "new_deals_found", "notifications_sent", "duration_ms"]
+      }
+    },
+    {
+      "title": "Failed Jobs",
+      "type": "table",
+      "query": "costco-deals-bot\n| where event_type == \"job.daily_parse.error\"\n| sort by _time desc\n| limit 10\n| project _time, stores_count, deals_processed, error_message, duration_ms",
+      "visualization": {
+        "columns": ["_time", "stores_count", "deals_processed", "error_message", "duration_ms"]
+      }
+    },
+    {
+      "title": "Notification Success Rate",
+      "type": "gauge",
+      "query": "costco-deals-bot\n| where event_type in [\"notification.sent\", \"notification.failed\"]\n| summarize success_rate = count_if(event_type == \"notification.sent\") / count() * 100",
+      "visualization": {
+        "label": "Success Rate %",
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "title": "API Calls by Status",
+      "type": "pie",
+      "query": "costco-deals-bot\n| where event_type in [\"yep.api.success\", \"yep.api.error\"]\n| summarize count() by event_type",
+      "visualization": {
+        "series": "event_type"
+      }
+    },
+    {
+      "title": "System Uptime",
+      "type": "line",
+      "query": "costco-deals-bot\n| where event_type in [\"app.startup\", \"app.shutdown\"]\n| sort by _time desc\n| project _time, event_type",
+      "visualization": {
+        "xAxis": "_time",
+        "yAxis": "event_type"
+      }
+    }
+  ],
+  "refresh": "1m"
+}

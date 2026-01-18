@@ -1,0 +1,25 @@
+{
+  "name": "Job Failure Alert",
+  "description": "Alert when daily parse job fails",
+  "enabled": true,
+  "dataset": "costco-deals-bot",
+  "query": "costco-deals-bot\n| where event_type == \"job.daily_parse.error\"\n| where _time > now() - 5m",
+  "condition": "count > 0",
+  "threshold": {
+    "type": "absolute",
+    "value": 0,
+    "operator": "greater_than"
+  },
+  "window": "5m",
+  "evaluation": "every 1m",
+  "notification": {
+    "channels": ["email", "slack"],
+    "message": "Daily parse job failed! Error: {{error_message}}. Stores processed: {{stores_count}}",
+    "severity": "critical"
+  },
+  "recovery": {
+    "enabled": true,
+    "message": "Daily parse job has completed successfully.",
+    "window": "30m"
+  }
+}

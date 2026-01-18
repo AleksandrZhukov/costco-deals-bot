@@ -1,0 +1,25 @@
+{
+  "name": "API Latency Alert",
+  "description": "Alert when API response time exceeds 1 second",
+  "enabled": true,
+  "dataset": "costco-deals-bot",
+  "query": "costco-deals-bot\n| where event_type == \"yep.api.success\"\n  and duration_ms > 1000\n  and _time > now() - 5m\n| summarize count() as slow_count, avg(duration_ms) as avg_latency\n| where slow_count > 5",
+  "condition": "slow_count > 5",
+  "threshold": {
+    "type": "absolute",
+    "value": 5,
+    "operator": "greater_than"
+  },
+  "window": "5m",
+  "evaluation": "every 1m",
+  "notification": {
+    "channels": ["email", "slack"],
+    "message": "API latency high: {{slow_count}} slow requests (>1s) in the last 5 minutes. Average latency: {{avg_latency}}ms",
+    "severity": "warning"
+  },
+  "recovery": {
+    "enabled": true,
+    "message": "API latency has returned to normal levels.",
+    "window": "10m"
+  }
+}
