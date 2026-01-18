@@ -1,6 +1,8 @@
 import { fetchDealsForStore } from "../services/yepApi/index.js";
 import { processDealsFromApi, expireExpiredDeals } from "../services/index.js";
 import { getAllActiveUsers } from "../database/queries.js";
+import { createJobTracker } from "../utils/logger.js";
+import { logError } from "../utils/errorLogger.js";
 
 interface ParseJobOptions {
   manual?: boolean;
@@ -14,6 +16,8 @@ export async function runDailyParse(options: ParseJobOptions = {}): Promise<void
     `${manual ? "Manual" : "Scheduled"} daily parse started at ${new Date().toISOString()}`
   );
 
+  const jobTracker = createJobTracker('daily_parse', manual);
+
   try {
     const allUsers = await getAllActiveUsers();
     const uniqueStoreIds = new Set(
@@ -24,6 +28,8 @@ export async function runDailyParse(options: ParseJobOptions = {}): Promise<void
 
     let totalProcessed = 0;
     let totalNewDeals = 0;
+    let errorsEncountered = 0;
+    const errors: Array<{ storeId: number; error: string }> = [];
 
     for (const storeId of uniqueStoreIds) {
       if (specificStoreId && storeId !== specificStoreId) {
@@ -40,7 +46,10 @@ export async function runDailyParse(options: ParseJobOptions = {}): Promise<void
         });
 
         if (!apiResult.success || !apiResult.deals) {
-          console.error(`Failed to fetch deals for store ${storeId}:`, apiResult.error);
+          const errorMsg = `Failed to fetch deals for store ${storeId}: ${apiResult.error}`;
+          console.error(errorMsg);
+          errorsEncountered++;
+          errors.push({ storeId, error: apiResult.error || 'Unknown error' });
           continue;
         }
 
@@ -55,7 +64,15 @@ export async function runDailyParse(options: ParseJobOptions = {}): Promise<void
         totalProcessed += apiResult.deals.length;
         totalNewDeals += processResult.newDeals.length;
       } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
         console.error(`Error processing store ${storeId}:`, error);
+        errorsEncountered++;
+        errors.push({ storeId, error: errorMessage });
+        logError(error, {
+          error_type: 'error.database',
+          fn_name: 'runDailyParse',
+          store_id: storeId,
+        });
       }
     }
 
@@ -63,10 +80,26 @@ export async function runDailyParse(options: ParseJobOptions = {}): Promise<void
     console.log(`Marked ${expiredCount} deals as expired`);
 
     console.log(
-      `Daily parse complete: ${totalProcessed} total deals processed, ${totalNewDeals} new deals found`
+      `Daily parse complete: ${totalProcessed} total deals processed, ${totalNewDeals} new deals found, ${errorsEncountered} errors`
     );
+
+    jobTracker.complete({
+      storesCount: uniqueStoreIds.size,
+      dealsProcessed: totalProcessed,
+      newDealsFound: totalNewDeals,
+      notificationsSent: 0,
+    });
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     console.error("Fatal error in daily parse:", error);
+
+    logError(error, {
+      error_type: 'error.database',
+      fn_name: 'runDailyParse',
+    });
+
+    jobTracker.error(errorMessage);
+
     throw error;
   }
 }
