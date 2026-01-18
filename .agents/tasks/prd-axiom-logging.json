@@ -174,7 +174,7 @@
     {
       "id": "US-006",
       "title": "Deal Processing Logging",
-      "status": "open",
+      "status": "completed",
       "dependsOn": [
         "US-005"
       ],
@@ -185,7 +185,9 @@
         "Track performance timing for each processing stage",
         "Example: batch process log shows 50 deals processed, 2 failed, avg 15ms per deal",
         "Negative case: processing error should log deal ID and specific error reason"
-      ]
+      ],
+      "completedAt": "2026-01-18T19:50:26Z",
+      "updatedAt": "2026-01-18T19:50:26Z"
     },
     {
       "id": "US-007",
