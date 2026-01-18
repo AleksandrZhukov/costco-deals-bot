@@ -210,7 +210,7 @@
     {
       "id": "US-008",
       "title": "User Action Logging",
-      "status": "open",
+      "status": "completed",
       "dependsOn": [
         "US-003"
       ],
@@ -223,7 +223,9 @@
         "Update src/bot/handlers/callbackHandler.ts to log all callback interactions",
         "Example: deal view action logs user ID, deal ID, filters applied",
         "Negative case: invalid callback should log error with callback data"
-      ]
+      ],
+      "completedAt": "2026-01-18T19:56:15Z",
+      "updatedAt": "2026-01-18T19:56:15Z"
     },
     {
       "id": "US-009",
