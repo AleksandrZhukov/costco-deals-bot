@@ -73,11 +73,12 @@ Click the buttons below to change your settings:
 
 export async function handleStoreChange(
   bot: TelegramBot,
+  callbackQueryId: string,
   userId: number,
   storeId: number
 ): Promise<void> {
   try {
-    await bot.answerCallbackQuery(userId.toString(), {
+    await bot.answerCallbackQuery(callbackQueryId, {
       text: `✅ Store changed`,
     });
 
@@ -85,7 +86,7 @@ export async function handleStoreChange(
     await handleSettingsCommand(bot, userId);
   } catch (error) {
     console.error("Error changing store:", error);
-    await bot.answerCallbackQuery(userId.toString(), {
+    await bot.answerCallbackQuery(callbackQueryId, {
       text: "❌ Failed to change store",
       show_alert: true,
     });
@@ -94,13 +95,14 @@ export async function handleStoreChange(
 
 export async function handleToggleNotifications(
   bot: TelegramBot,
+  callbackQueryId: string,
   userId: number
 ): Promise<void> {
   try {
     const user = await getUserByTelegramId(userId);
 
     if (!user) {
-      await bot.answerCallbackQuery(userId.toString(), {
+      await bot.answerCallbackQuery(callbackQueryId, {
         text: "❌ User not found",
         show_alert: true,
       });
@@ -109,7 +111,7 @@ export async function handleToggleNotifications(
 
     const newStatus = !user.notificationsEnabled;
 
-    await bot.answerCallbackQuery(userId.toString(), {
+    await bot.answerCallbackQuery(callbackQueryId, {
       text: `Notifications ${newStatus ? "enabled" : "disabled"}`,
     });
 
@@ -117,7 +119,7 @@ export async function handleToggleNotifications(
     await handleSettingsCommand(bot, userId);
   } catch (error) {
     console.error("Error toggling notifications:", error);
-    await bot.answerCallbackQuery(userId.toString(), {
+    await bot.answerCallbackQuery(callbackQueryId, {
       text: "❌ Failed to toggle notifications",
       show_alert: true,
     });

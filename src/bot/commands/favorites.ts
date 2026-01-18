@@ -75,17 +75,18 @@ export async function handleFavoritesCommand(
 
 export async function toggleFavorite(
   bot: TelegramBot,
+  callbackQueryId: string,
   userId: number,
   dealId: number,
   isFavorite: boolean
 ): Promise<void> {
   try {
     if (isFavorite) {
-      await bot.answerCallbackQuery(userId.toString(), {
+      await bot.answerCallbackQuery(callbackQueryId, {
         text: "⭐ Deal added to favorites!",
       });
     } else {
-      await bot.answerCallbackQuery(userId.toString(), {
+      await bot.answerCallbackQuery(callbackQueryId, {
         text: "💔 Deal removed from favorites",
       });
     }
@@ -93,7 +94,7 @@ export async function toggleFavorite(
     await setDealFavorite(userId, dealId, isFavorite);
   } catch (error) {
     console.error("Error toggling favorite:", error);
-    await bot.answerCallbackQuery(userId.toString(), {
+    await bot.answerCallbackQuery(callbackQueryId, {
       text: "❌ Failed to update favorite",
       show_alert: true,
     });

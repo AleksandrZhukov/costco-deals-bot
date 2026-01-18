@@ -35,10 +35,10 @@ export function setupBotHandlers(): void {
   });
 
   bot.on("callback_query", async (query) => {
-    const { id, data } = query;
+    const { id, data, from } = query;
 
     if (data) {
-      await handleCallbackQuery(bot, id, data);
+      await handleCallbackQuery(bot, id, data, from.id);
     }
   });
 
