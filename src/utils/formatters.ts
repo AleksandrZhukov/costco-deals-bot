@@ -35,7 +35,6 @@ export function formatDealMessage(
     goodsImg: string | null;
   }
 ): string {
-  const discount = calculateDiscount(deal.sourcePrice, deal.discountPrice);
   const discountPrice = formatPrice(deal.discountPrice);
   const sourcePrice = formatPrice(deal.sourcePrice);
   const currentPrice = formatPrice(deal.currentPrice);
@@ -52,16 +51,12 @@ export function formatDealMessage(
     message += `\n💵 Original: ${sourcePrice}`;
   }
 
-  if (discount !== "N/A") {
-    message += `\n📉 ${discount} OFF`;
-  }
-
-  if (currentPrice !== "N/A" && currentPrice !== discountPrice && sourcePrice !== "N/A") {
+  if (currentPrice !== "N/A" && sourcePrice !== "N/A") {
     const sourceNum = parseFloat(deal.sourcePrice || "0");
     const currentNum = parseFloat(deal.currentPrice || "0");
     if (!isNaN(sourceNum) && !isNaN(currentNum) && sourceNum > currentNum) {
       const saving = (sourceNum - currentNum).toFixed(2);
-      message += ` ($${saving})`;
+      message += `\n📉 Save $${saving}`;
     }
   }
 
