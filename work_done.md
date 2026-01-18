@@ -304,3 +304,52 @@ Cron job configured and running on schedule. Full pipeline: fetch -> process -> 
 All commands functional with interactive buttons. User preferences working. All type checks and build pass. Ready for Phase 10.
 
 ---
+
+## Phase 10: Docker & Deployment ✅
+**Commit:** `3405c53` | **Date:** Jan 17, 2026
+
+### Completed
+- ✅ Created `Dockerfile` with multi-stage build:
+  - Uses `node:24-alpine` base image
+  - Installs production dependencies only (`npm ci --only=production`)
+  - Builds TypeScript to `dist/` directory
+  - Creates non-root user for security
+  - Exposes port 3000 for health checks
+  - Configures health check with proper intervals (30s interval, 3s timeout, 3 retries)
+- ✅ Created `docker-compose.yml`:
+  - Configures service with all environment variables
+  - Sets up volume for logs (`./logs:/app/logs`)
+  - Configures restart policy (`unless-stopped`)
+  - Adds health check with proper configuration
+  - Sets up log rotation (10MB max per file, keeping 3 files)
+- ✅ Created `.dockerignore` file:
+  - Excludes `node_modules`, `dist`, git files
+  - Excludes `.env`, logs, markdown files
+  - Reduces build context size
+- ✅ Added simple health check endpoint:
+  - Simple HTTP server on port 3000
+  - Returns `200 OK` for `/health` endpoint
+  - Returns `404 Not Found` for other endpoints
+  - Integrated into Docker health checks
+- ✅ Created `DEPLOYMENT.md` documentation:
+  - Complete deployment guide with Docker instructions
+  - Environment variables reference and examples
+  - Database setup instructions (Neon and self-hosted)
+  - Bot setup and configuration steps
+  - Troubleshooting guide for common issues
+  - Production considerations (security, monitoring, scaling, backups)
+  - Update instructions for production deployments
+
+### Files Created
+- `Dockerfile` (22 lines)
+- `docker-compose.yml` (33 lines)
+- `.dockerignore` (15 lines)
+- `DEPLOYMENT.md` (195 lines)
+
+### Files Modified
+- `src/index.ts` - Added health check server
+
+### Status
+Docker image builds successfully. Container runs with docker-compose. Health checks configured. All type checks and build pass. Ready for Phase 11.
+
+---
