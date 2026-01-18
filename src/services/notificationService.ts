@@ -2,17 +2,20 @@ import type TelegramBot from "node-telegram-bot-api";
 import { getDealWithProduct } from "../database/queries.js";
 import { logNotification } from "../database/queries.js";
 import { formatDealMessage } from "../utils/formatters.js";
+import { createNotificationTracker, createBatchTracker } from "../utils/logger.js";
 
 export async function sendDealNotification(
   bot: TelegramBot,
   userTelegramId: number,
   dealId: number
 ): Promise<boolean> {
+  const tracker = createNotificationTracker(userTelegramId, String(dealId));
+
   try {
     const dealWithProduct = await getDealWithProduct(dealId);
 
     if (!dealWithProduct || !dealWithProduct.products) {
-      console.error(`Deal ${dealId} not found or has no product`);
+      tracker.failed(`Deal ${dealId} not found or has no product`);
       return false;
     }
 
@@ -45,15 +48,24 @@ export async function sendDealNotification(
       wasSuccessful: true,
     });
 
+    tracker.sent({
+      storeId: 0,
+      productUpc: product.itmUpcCode,
+      hasImage: !!product.goodsImg,
+      messageLength: message.length,
+    });
+
     return true;
   } catch (error) {
-    console.error(`Error sending notification to user ${userTelegramId} for deal ${dealId}:`, error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
 
     await logNotification({
       userTelegramId,
       dealId,
       wasSuccessful: false,
     });
+
+    tracker.failed(errorMessage);
 
     return false;
   }
@@ -64,6 +76,7 @@ export async function sendBatchNotifications(
   users: number[],
   dealId: number
 ): Promise<{ success: number; failed: number }> {
+  const tracker = createBatchTracker();
   const result = { success: 0, failed: 0 };
 
   for (const userId of users) {
@@ -78,6 +91,12 @@ export async function sendBatchNotifications(
     const delay = (Math.random() * 1000 + 500);
     await new Promise((resolve) => setTimeout(resolve, delay));
   }
+
+  tracker.complete('notification.batch_complete', {
+    total_notifications: users.length,
+    success_count: result.success,
+    failure_count: result.failed,
+  });
 
   return result;
 }
