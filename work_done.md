@@ -614,3 +614,28 @@ None
 Status: Story completed. All acceptance criteria implemented.
 ---
 
+
+
+## US-008: User Action Logging ✅
+**Commit:** `[main 5088dea] feat: US-008 - User Action Logging
+ 6 files changed, 98 insertions(+)
+5088deaa0c67c37fb1c1552dab06bb33406b02fd` | **Date:** Jan 18, 2026
+
+### Completed
+- ✅ User Action Logging
+
+### Files Created
+None
+
+### Files Modified
+- `src/bot/commands/deals.ts`
+- `src/bot/commands/favorites.ts`
+- `src/bot/commands/settings.ts`
+- `src/bot/commands/start.ts`
+- `src/bot/handlers/callbackHandler.ts`
+- `src/utils/errorLogger.ts`
+
+
+Status: Story completed. All acceptance criteria implemented.
+---
+
