@@ -248,7 +248,7 @@
     {
       "id": "US-010",
       "title": "Database Query Logging",
-      "status": "open",
+      "status": "completed",
       "dependsOn": [
         "US-003"
       ],
@@ -259,7 +259,9 @@
         "Track query frequency to identify frequently executed slow queries",
         "Example: slow query log shows SELECT * FROM deals WHERE ... took 2.5s",
         "Negative case: malformed query should log error without crashing app"
-      ]
+      ],
+      "completedAt": "2026-01-18T20:00:47Z",
+      "updatedAt": "2026-01-18T20:00:47Z"
     },
     {
       "id": "US-011",
