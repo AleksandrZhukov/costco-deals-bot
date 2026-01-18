@@ -5,11 +5,12 @@
 - Docker and Docker Compose installed
 - PostgreSQL database (Neon or self-hosted)
 - Telegram Bot Token from BotFather
+- Axiom account for logging
 - Environment variables configured
 
 ## Environment Variables
 
-Create a `.env` file in the project root with the following variables:
+Create a `.env` file in project root with the following variables:
 
 ```bash
 # Database
@@ -22,6 +23,11 @@ TELEGRAM_BOT_TOKEN=your_bot_token_here
 YEP_API_BASE_URL=https://www.yepsavings.com
 YEP_API_COOKIE=ezoictest=stable
 
+# Axiom Logging
+AXIOM_TOKEN=your_axiom_api_token_here
+AXIOM_DATASET=costco-deals-bot
+LOG_LEVEL=info
+
 # Scheduling
 DAILY_PARSE_SCHEDULE=0 9 * * *
 TIMEZONE=America/Edmonton
@@ -29,6 +35,172 @@ TIMEZONE=America/Edmonton
 # Node Environment
 NODE_ENV=production
 ```
+
+### Environment Variable Details
+
+| Variable | Required | Description | Example |
+|----------|-----------|-------------|---------|
+| `DATABASE_URL` | Yes | PostgreSQL connection string | `postgresql://user:pass@host:5432/db` |
+| `TELEGRAM_BOT_TOKEN` | Yes | Bot token from @BotFather | `123456789:ABCdefGHI...` |
+| `YEP_API_BASE_URL` | Yes | YEP Savings API endpoint | `https://www.yepsavings.com` |
+| `YEP_API_COOKIE` | Yes | Cookie for API authentication | `ezoictest=stable` |
+| `AXIOM_TOKEN` | Yes | Axiom API token for logging | `xaat-xxx...` |
+| `AXIOM_DATASET` | No | Axiom dataset name (default: costco-deals-bot) | `costco-deals-bot` |
+| `LOG_LEVEL` | No | Logging verbosity (debug, info, warn, error) | `info` |
+| `WEBHOOK_URL` | No | Telegram webhook URL (production only) | `https://your-bot.onrender.com` |
+| `NODE_ENV` | No | Environment mode | `development` or `production` |
+
+## Axiom Logging Setup
+
+Axiom provides centralized log management for the bot. Follow these steps to set it up:
+
+### 1. Create Axiom Account
+
+1. Go to https://axiom.co
+2. Sign up for a free account (no credit card required)
+3. Free tier includes 500MB/day of log ingestion
+
+### 2. Create Dataset
+
+1. After logging in, you'll be prompted to ingest data
+2. Choose "Don't have data? Create a dataset"
+3. Enter dataset name: `costco-deals-bot`
+4. Click "Create dataset"
+
+### 3. Generate API Token
+
+1. Navigate to **Settings** → **API Tokens** (left sidebar)
+2. Click **+ New Token**
+3. Configure the token:
+   - **Name**: `yep-savings-bot`
+   - **Permissions**: Check "Ingest" and "Query"
+   - **Scopes**: Leave empty (applies to all datasets)
+4. Click **Create Token**
+5. **Important**: Copy the token immediately (you won't see it again)
+6. Format: `xaat-xxxx...` (save this to `.env` as `AXIOM_TOKEN`)
+
+### 4. Configure Environment Variables
+
+Add these to your `.env` file:
+
+```bash
+# Axiom Logging
+AXIOM_TOKEN=xaat-your-token-here
+AXIOM_DATASET=costco-deals-bot
+LOG_LEVEL=info
+```
+
+**Log Levels**:
+- `debug`: All logs including health checks and detailed operations
+- `info` (default): Normal operations, errors, and warnings
+- `warn`: Only warnings and errors
+- `error`: Only errors
+
+### 5. Verify Logging
+
+Start the bot locally to verify logs are flowing:
+
+```bash
+# Ensure .env is configured
+npm run dev
+
+# Trigger some actions:
+# - Send /start to your bot
+# - Send /deals to see deal listings
+# - Send /settings to change preferences
+```
+
+Check logs in Axiom:
+
+1. Go to https://axiom.co
+2. Click on `costco-deals-bot` dataset
+3. You should see events like:
+   - `app.startup`
+   - `user.command`
+   - `yep.api.success`
+   - `deal.processed`
+
+### 6. Optional: Configure Dataset Settings
+
+Navigate to your dataset → **Settings**:
+
+- **Retention**: Set to 30 days (free tier default)
+- **Field Types**: Axiom auto-detects, but you can manually configure if needed
+  - `event_type`: string
+  - `user_id`: number
+  - `store_id`: number
+  - `deal_id`: string
+  - `success`: boolean
+
+### 7. Create Dashboards (Optional)
+
+See [docs/AXIOM_QUERIES.md](./docs/AXIOM_QUERIES.md) for dashboard query examples.
+
+**Recommended Dashboards**:
+
+#### Operations Dashboard
+- Error rate over time
+- API success/failure ratio
+- Job execution status
+- Notification success rate
+
+#### Business Metrics Dashboard
+- Deals processed per day
+- New deals detected per day
+- Notifications sent per day
+- Top stores by activity
+
+#### Performance Dashboard
+- API response times (p50, p95, p99)
+- Deal processing duration
+- Database query times
+
+### 8. Set Up Alerts (Optional)
+
+Create alerts for critical issues:
+
+**High Error Rate Alert**:
+```
+dataset: costco-deals-bot
+query: | where event_type in ["error.unhandled", "error.validation", "error.network", "error.database"] | count()
+condition: count > 10
+window: 5 minutes
+```
+
+**API Failure Alert**:
+```
+dataset: costco-deals-bot
+query: | where event_type == "yep.api.error" | count()
+condition: count > 5
+window: 1 minute
+```
+
+**Job Failure Alert**:
+```
+dataset: costco-deals-bot
+query: | where event_type == "job.daily_parse.error"
+condition: count > 0
+window: 5 minutes
+```
+
+### Troubleshooting Axiom Setup
+
+**Logs not appearing**:
+1. Verify `AXIOM_TOKEN` is correct (starts with `xaat-`)
+2. Check dataset name matches `AXIOM_DATASET`
+3. Verify log level: `LOG_LEVEL` (set to `debug` to see all logs)
+4. Check network connectivity to Axiom
+
+**Authentication errors**:
+1. Ensure token has "Ingest" permission
+2. Verify token hasn't been revoked
+3. Regenerate token if needed
+
+**Too many logs**:
+1. Increase log level: `LOG_LEVEL=warn` or `LOG_LEVEL=error`
+2. Disable debug logs in production
+
+For more logging details, see [docs/LOGGING.md](./docs/LOGGING.md).
 
 ## Quick Start
 
