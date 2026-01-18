@@ -7,6 +7,8 @@ import {
   type YepApiResponse,
   type YepDealItem,
 } from "../../types/yepApi.js";
+import { createApiCallTracker } from "../../utils/logger.js";
+import { logNetworkError } from "../../utils/errorLogger.js";
 
 export interface FetchDealsOptions {
   storeId: number;
@@ -28,6 +30,8 @@ export async function fetchDealsForStore(
 ): Promise<FetchDealsResult> {
   const { storeId, pageNum = 1, pageSize = 1000 } = options;
 
+  const tracker = createApiCallTracker(storeId, pageNum);
+
   try {
     const response = await yepApi.get(API_PATH, {
       params: {
@@ -43,14 +47,18 @@ export async function fetchDealsForStore(
     const validationResult = safeParseYepApiResponse(response.data);
 
     if (!validationResult.success || !validationResult.data) {
+      tracker.error(
+        `API response validation failed: ${validationResult.error?.message ?? "Unknown validation error"}`,
+        response.status
+      );
       return {
         success: false,
         error: `API response validation failed: ${validationResult.error?.message ?? "Unknown validation error"}`,
       };
     }
 
-    // Check if API returned an error (non-200 code or string data)
     if (!isApiSuccessResponse(validationResult.data)) {
+      tracker.error(`API error: ${validationResult.data.message}`, response.status);
       return {
         success: false,
         error: `API error: ${validationResult.data.message}`,
@@ -59,12 +67,25 @@ export async function fetchDealsForStore(
 
     const dealData = getDealDataFromResponse(validationResult.data);
 
+    tracker.success(dealData?.goods?.length || 0, response.status);
+
     return {
       success: true,
       data: validationResult.data,
       deals: dealData?.goods,
     };
   } catch (error) {
+    const statusCode = axios.isAxiosError(error) ? error.response?.status : undefined;
+
+    logNetworkError(error, {
+      store_id: storeId,
+    });
+
+    tracker.error(
+      error instanceof Error ? error.message : String(error),
+      statusCode
+    );
+
     if (axios.isAxiosError(error)) {
       return {
         success: false,
