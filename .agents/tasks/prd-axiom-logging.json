@@ -1,0 +1,300 @@
+{
+  "title": "Axiom Wide Event Logging System",
+  "slug": "axiom-logging",
+  "type": "technical-infrastructure",
+  "status": "approved",
+  "context": {
+    "problem": "Current logging is insufficient for deep debugging and monitoring. Need a centralized, structured logging solution to track system health and user behavior effectively.",
+    "solution": "Implement @axiomhq/logging with Wide Events (Canonical Log Lines) pattern, ensuring one rich event per logical operation.",
+    "source_document": "/Users/azhukov/projects/deal-bot/axiom-logging-plan.md"
+  },
+  "goals": [
+    "Implement structured logging with one rich event per logical operation",
+    "Enable centralized log management via Axiom",
+    "Provide dashboards for operations, business metrics, and performance",
+    "Ensure type safety for all log events"
+  ],
+  "success_criteria": [
+    "All event types flowing to Axiom (System, API, Deals, Notifications, User Actions, Jobs)",
+    "Less than 100ms p95 latency added by logging",
+    "No blocking on log writes",
+    "Graceful shutdown with log flush verified",
+    "Dashboards created and showing data",
+    "Alerts configured for critical thresholds"
+  ],
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "category": "Setup",
+      "description": "Install and configure @axiomhq/logging with environment variables."
+    },
+    {
+      "id": "REQ-2",
+      "category": "Architecture",
+      "description": "Define strongly-typed Wide Events for all major system activities (Deals, Notifications, API, User Actions)."
+    },
+    {
+      "id": "REQ-3",
+      "category": "Implementation",
+      "description": "Create logger utility helpers for consistent event enrichment and error handling."
+    },
+    {
+      "id": "REQ-4",
+      "category": "Integration",
+      "description": "Integrate logging into Application Lifecycle (Startup/Shutdown/Health)."
+    },
+    {
+      "id": "REQ-5",
+      "category": "Integration",
+      "description": "Integrate logging into API Calls (YEP API) with timing and success/error stats."
+    },
+    {
+      "id": "REQ-6",
+      "category": "Integration",
+      "description": "Integrate logging into Deal Processing with per-deal and batch stats."
+    },
+    {
+      "id": "REQ-7",
+      "category": "Integration",
+      "description": "Integrate logging into Notification Service with success/failure tracking."
+    },
+    {
+      "id": "REQ-8",
+      "category": "Integration",
+      "description": "Integrate logging into User Actions (Commands, Callbacks)."
+    },
+    {
+      "id": "REQ-9",
+      "category": "Integration",
+      "description": "Integrate logging into Scheduled Jobs (Daily Parse)."
+    },
+    {
+      "id": "REQ-10",
+      "category": "Documentation",
+      "description": "Update deployment docs and create logging guide."
+    }
+  ],
+  "qualityGates": [
+    "npm run lint",
+    "npm run build"
+  ],
+  "stories": [
+    {
+      "id": "US-001",
+      "title": "Setup Axiom Logging Configuration",
+      "status": "completed",
+      "dependsOn": [],
+      "description": "As a developer, I want to install and configure @axiomhq/logging so the system can send logs to Axiom.",
+      "acceptanceCriteria": [
+        "npm install @axiomhq/logging",
+        "Update src/config/env.ts with AXIOM_TOKEN, AXIOM_DATASET, LOG_LEVEL variables",
+        "Create src/config/axiom.ts with logger instance configured from env",
+        "Update .env.example with new variables",
+        "Example: logger instance can be imported and used without errors",
+        "Negative case: missing env variables should show clear error"
+      ],
+      "startedAt": "2026-01-18T18:48:52.387508+00:00",
+      "completedAt": "2026-01-18T19:20:29Z",
+      "updatedAt": "2026-01-18T19:20:29Z"
+    },
+    {
+      "id": "US-002",
+      "title": "Define Wide Event Types",
+      "status": "open",
+      "dependsOn": [
+        "US-001"
+      ],
+      "description": "As a developer, I want strongly-typed event definitions so all logs follow a consistent structure.",
+      "acceptanceCriteria": [
+        "Create src/types/logging.ts with BaseEvent, EventContext interfaces",
+        "Create specific event interfaces for System, API, Deals, Notifications, UserActions, Jobs",
+        "Create src/utils/eventTypes.ts with constant values for all event types",
+        "Example: creating a DealEvent has all required fields typed",
+        "Negative case: missing required field in event should show TypeScript error"
+      ]
+    },
+    {
+      "id": "US-003",
+      "title": "Create Logger Utilities",
+      "status": "open",
+      "dependsOn": [
+        "US-001",
+        "US-002"
+      ],
+      "description": "As a developer, I want helper functions for consistent event enrichment and error logging.",
+      "acceptanceCriteria": [
+        "Create src/utils/logger.ts with enrichment logic for context, correlation IDs",
+        "Add convenience methods for each event type (logSystemEvent, logApiCall, etc.)",
+        "Create src/utils/errorLogger.ts for standardized error logging with stack traces",
+        "Example: logApiCall automatically includes duration, success status, correlation ID",
+        "Negative case: error with no message should use fallback 'Unknown error'"
+      ]
+    },
+    {
+      "id": "US-004",
+      "title": "Application Lifecycle Logging",
+      "status": "open",
+      "dependsOn": [
+        "US-003"
+      ],
+      "description": "As an operator, I want to track application startup, shutdown, and health events for monitoring.",
+      "acceptanceCriteria": [
+        "Update src/index.ts to log startup with version, environment, config summary",
+        "Log graceful shutdown with final stats",
+        "Log health check responses",
+        "Log uncaught errors and unhandled promise rejections",
+        "Example: startup log includes environment, port, services initialized",
+        "Negative case: startup failure should log error before process exits"
+      ]
+    },
+    {
+      "id": "US-005",
+      "title": "API Call Logging",
+      "status": "open",
+      "dependsOn": [
+        "US-003"
+      ],
+      "description": "As a developer, I want to track all external API calls with timing and success rates for performance monitoring.",
+      "acceptanceCriteria": [
+        "Update src/services/yepApi/dealParser.ts to log API requests before sending",
+        "Log API responses with success status, response time, deal count",
+        "Log API errors with error details, retry attempts, correlation ID",
+        "Example: successful API call logs endpoint, duration, deal count parsed",
+        "Negative case: API timeout should log error with timeout duration"
+      ]
+    },
+    {
+      "id": "US-006",
+      "title": "Deal Processing Logging",
+      "status": "open",
+      "dependsOn": [
+        "US-005"
+      ],
+      "description": "As a developer, I want to track deal processing performance and results for debugging and monitoring.",
+      "acceptanceCriteria": [
+        "Update src/services/dealProcessor.ts to log individual deals with ID, price, processing result",
+        "Log batch summaries with total deals, successful, failed, average processing time",
+        "Track performance timing for each processing stage",
+        "Example: batch process log shows 50 deals processed, 2 failed, avg 15ms per deal",
+        "Negative case: processing error should log deal ID and specific error reason"
+      ]
+    },
+    {
+      "id": "US-007",
+      "title": "Notification Logging",
+      "status": "open",
+      "dependsOn": [
+        "US-003"
+      ],
+      "description": "As an operator, I want to track notification delivery to ensure users receive alerts reliably.",
+      "acceptanceCriteria": [
+        "Update src/services/notificationService.ts to log each sent notification with user ID, type, channel",
+        "Log notification failures with error details and retry status",
+        "Log batch notification summaries with success/failure counts",
+        "Example: sent notification log includes user ID, notification type, channel, timestamp",
+        "Negative case: failed notification should log user ID, error, and whether retry scheduled"
+      ]
+    },
+    {
+      "id": "US-008",
+      "title": "User Action Logging",
+      "status": "open",
+      "dependsOn": [
+        "US-003"
+      ],
+      "description": "As a product manager, I want to track user actions to understand feature usage and identify issues.",
+      "acceptanceCriteria": [
+        "Update src/bot/commands/start.ts to log /start command with user ID",
+        "Update src/bot/commands/deals.ts to log deal interactions (view, filter, refresh)",
+        "Update src/bot/commands/favorites.ts to log favorite add/remove actions",
+        "Update src/bot/commands/settings.ts to log setting changes",
+        "Update src/bot/handlers/callbackHandler.ts to log all callback interactions",
+        "Example: deal view action logs user ID, deal ID, filters applied",
+        "Negative case: invalid callback should log error with callback data"
+      ]
+    },
+    {
+      "id": "US-009",
+      "title": "Job Execution Logging",
+      "status": "open",
+      "dependsOn": [
+        "US-003"
+      ],
+      "description": "As an operator, I want to track scheduled job execution to ensure background tasks complete successfully.",
+      "acceptanceCriteria": [
+        "Update src/schedulers/dailyParser.ts to log job start with timestamp, scheduled time",
+        "Log job completion with duration, deals processed, errors encountered",
+        "Log job failures with error details and next scheduled run",
+        "Example: job completion log shows 'processed 100 deals in 5.2s, 0 errors'",
+        "Negative case: job crash should log stack trace and partial progress"
+      ]
+    },
+    {
+      "id": "US-010",
+      "title": "Database Query Logging",
+      "status": "open",
+      "dependsOn": [
+        "US-003"
+      ],
+      "description": "As a developer, I want to track slow database queries to identify performance bottlenecks.",
+      "acceptanceCriteria": [
+        "Add query wrapper in src/database/queries.ts to track query execution time",
+        "Log queries exceeding 1 second as slow queries with query text and duration",
+        "Track query frequency to identify frequently executed slow queries",
+        "Example: slow query log shows SELECT * FROM deals WHERE ... took 2.5s",
+        "Negative case: malformed query should log error without crashing app"
+      ]
+    },
+    {
+      "id": "US-011",
+      "title": "Create Logging Documentation",
+      "status": "open",
+      "dependsOn": [
+        "US-010"
+      ],
+      "description": "As a developer, I want documentation on how to use logging effectively so team members can add logs consistently.",
+      "acceptanceCriteria": [
+        "Create docs/LOGGING.md with usage examples, event type reference, best practices",
+        "Update DEPLOYMENT.md with Axiom setup instructions and env variable configuration",
+        "Create docs/AXIOM_QUERIES.md with example queries for common debugging tasks",
+        "Example: docs show how to log a new event type with full code example",
+        "Negative case: docs should warn about not logging sensitive data"
+      ]
+    },
+    {
+      "id": "US-012",
+      "title": "Validate Logging Implementation",
+      "status": "open",
+      "dependsOn": [
+        "US-011"
+      ],
+      "description": "As a QA engineer, I want to verify all events flow correctly to Axiom and logging adds minimal overhead.",
+      "acceptanceCriteria": [
+        "Verify all event types appear in Axiom UI by triggering each event type",
+        "Validate event structure matches type definitions for each event type",
+        "Measure log volume and ensure < 100ms p95 latency added",
+        "Run load test and verify no blocking on log writes",
+        "Example: triggering /start command shows SystemEvent in Axiom within 1s",
+        "Negative case: event with missing required field should be logged with validation error"
+      ]
+    },
+    {
+      "id": "US-013",
+      "title": "Configure Axiom Dashboards and Alerts",
+      "status": "open",
+      "dependsOn": [
+        "US-012"
+      ],
+      "description": "As an operator, I want dashboards and alerts to quickly identify issues and system health.",
+      "acceptanceCriteria": [
+        "Configure dataset retention (7 days hot, 30 days warm)",
+        "Create Operations dashboard: error rate, API latency, job failures, system health",
+        "Create Business dashboard: deal volume, notification delivery, user activity",
+        "Create Performance dashboard: query latency, processing time, log volume",
+        "Set up alerts for error rate > 5%, API latency > 1s, job failures > 10%",
+        "Example: Operations dashboard shows real-time error count and rate",
+        "Negative case: alert should not fire for known maintenance window"
+      ]
+    }
+  ]
+}

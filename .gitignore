@@ -25,3 +25,6 @@ Thumbs.db
 
 # Drizzle
 drizzle/
+/.ralph/
+/.opencode/
+/.agents/ralph/
