@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  deal-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: deal-bot
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - YEP_API_BASE_URL=${YEP_API_BASE_URL:-https://www.yepsavings.com}
+      - YEP_API_COOKIE=${YEP_API_COOKIE:-ezoictest=stable}
+      - DAILY_PARSE_SCHEDULE=${DAILY_PARSE_SCHEDULE:-0 9 * * *}
+      - TIMEZONE=${TIMEZONE:-America/Edmonton}
+    volumes:
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

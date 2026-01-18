@@ -1,6 +1,25 @@
 import { env } from "./config/env.js";
 import { setupBotHandlers, registerCommands } from "./bot/index.js";
 import { startScheduler } from "./schedulers/dailyParser.js";
+import { createServer } from "http";
+
+const HEALTH_CHECK_PORT = 3000;
+
+function startHealthCheckServer(): void {
+  const server = createServer((req, res) => {
+    if (req.url === "/health") {
+      res.writeHead(200, { "Content-Type": "text/plain" });
+      res.end("OK");
+    } else {
+      res.writeHead(404, { "Content-Type": "text/plain" });
+      res.end("Not Found");
+    }
+  });
+
+  server.listen(HEALTH_CHECK_PORT, () => {
+    console.log(`✅ Health check server listening on port ${HEALTH_CHECK_PORT}`);
+  });
+}
 
 async function main() {
   console.log("YEP Savings Deal Bot starting...");
@@ -11,6 +30,7 @@ async function main() {
   setupBotHandlers();
   registerCommands();
   startScheduler();
+  startHealthCheckServer();
 
   console.log("Bot initialized successfully!");
 }
