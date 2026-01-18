@@ -1,5 +1,5 @@
 import type TelegramBot from "node-telegram-bot-api";
-import { getActiveDealsWithProductsNotHidden, getTotalVisibleActiveDealsCount } from "../../database/queries.js";
+import { getActiveDealsWithProductsNotHidden, getTotalVisibleActiveDealsCount, getUserByTelegramId } from "../../database/queries.js";
 import { isInCart } from "../../database/queries.js";
 import { formatDealMessage } from "../../utils/formatters.js";
 import { createUserActionTracker } from "../../utils/logger.js";
@@ -15,6 +15,15 @@ export async function handleDealsCommand(
   const tracker = createUserActionTracker(chatId);
 
   try {
+    const user = await getUserByTelegramId(chatId);
+
+    if (!user || !user.storeId) {
+      if (offset === 0) {
+        await bot.sendMessage(chatId, "Please configure your store in settings to view deals.");
+      }
+      return;
+    }
+
     if (offset === 0) {
       await bot.sendMessage(chatId, "🔍 Fetching current deals...");
     }
