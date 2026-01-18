@@ -1,6 +1,6 @@
 import { fetchDealsForStore } from "../services/yepApi/index.js";
 import { processDealsFromApi, expireExpiredDeals } from "../services/index.js";
-import { getAllActiveUsers } from "../database/queries.js";
+import { getAllActiveUsers, hasActiveDealsForStore } from "../database/queries.js";
 import { createJobTracker } from "../utils/logger.js";
 import { logError } from "../utils/errorLogger.js";
 
@@ -33,6 +33,11 @@ export async function runDailyParse(options: ParseJobOptions = {}): Promise<void
 
     for (const storeId of uniqueStoreIds) {
       if (specificStoreId && storeId !== specificStoreId) {
+        continue;
+      }
+
+      if (specificStoreId && await hasActiveDealsForStore(storeId)) {
+        console.log(`Skipping store ID: ${storeId} - deals already exist`);
         continue;
       }
 

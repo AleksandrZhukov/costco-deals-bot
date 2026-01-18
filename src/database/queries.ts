@@ -1,4 +1,4 @@
-import { eq, and, desc, count, or, isNull } from "drizzle-orm";
+import { eq, and, desc, count, or, isNull, sql } from "drizzle-orm";
 import { db } from "../config/database.js";
 import { createDbQueryTracker, getAllQueryFrequencies } from "../utils/logger.js";
 import {
@@ -344,6 +344,21 @@ export async function markDealsAsInactive(dealIds: number[]) {
     .set({ isActive: false, lastUpdatedAt: new Date() })
     .where(eq(deals.dealId, dealIds[0]))
     .returning();
+}
+
+export async function hasActiveDealsForStore(storeId: number): Promise<boolean> {
+  const result = await db
+    .select({ count: count() })
+    .from(deals)
+    .where(
+      and(
+        eq(deals.isActive, true),
+        sql`(${deals.rawData}->>'fk_store')::int = ${storeId}`
+      )
+    );
+
+  const dealCount = result[0]?.count ?? 0;
+  return dealCount > 0;
 }
 
 // ============================================

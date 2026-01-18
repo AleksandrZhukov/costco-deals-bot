@@ -4,6 +4,7 @@ import { updateUserStoreId } from "../../database/queries.js";
 import { updateUserNotifications } from "../../database/queries.js";
 import { createUserActionTracker } from "../../utils/logger.js";
 import { runDailyParse } from "../../schedulers/dailyParser.js";
+import { hasActiveDealsForStore } from "../../database/queries.js";
 
 const AVAILABLE_STORES = [
   { id: 25, name: "Calgary, AB" },
@@ -112,15 +113,19 @@ export async function handleStoreChange(
     const storeName =
       AVAILABLE_STORES.find((s) => s.id === storeId)?.name || "Unknown";
 
-    await bot.sendMessage(
-      userId,
-      `🔄 Fetching latest deals for *${storeName}*...\n\nPlease check your deals in about 1 minute.`,
-      { parse_mode: "Markdown" }
-    );
+    const hasDeals = await hasActiveDealsForStore(storeId);
+
+    if (!hasDeals) {
+      await bot.sendMessage(
+        userId,
+        `🔄 Fetching latest deals for *${storeName}*...\n\nPlease check your deals in about 1 minute.`,
+        { parse_mode: "Markdown" }
+      );
+
+      await runDailyParse({ manual: true, storeId });
+    }
 
     await handleSettingsCommand(bot, userId);
-
-    await runDailyParse({ manual: true, storeId });
 
     tracker.settingsChanged('store', user.storeId, storeId);
   } catch (error) {
