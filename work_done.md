@@ -257,3 +257,50 @@ Notification service complete. Messages formatted with images and buttons. Loggi
 Cron job configured and running on schedule. Full pipeline: fetch -> process -> notify complete. Error handling and logging in place. All type checks and build pass. Ready for Phase 9.
 
 ---
+
+## Phase 9: User Commands ✅
+**Commit:** `bd61b51` | **Date:** Jan 17, 2026
+
+### Completed
+- ✅ Created `src/bot/commands/deals.ts`:
+  - `handleDealsCommand()` - Show active deals for user's store
+  - Exclude hidden deals from user's view
+  - Display deals with product images and inline buttons
+  - Favorite and Hide buttons for each deal
+- ✅ Created `src/bot/commands/favorites.ts`:
+  - `handleFavoritesCommand()` - Show user's favorited deals
+  - Show only active favorites
+  - Unfavorite button for easy removal
+  - `toggleFavorite()` - Toggle favorite status with user feedback
+- ✅ Created `src/bot/commands/settings.ts`:
+  - `handleSettingsCommand()` - Show current settings (store, notifications)
+  - Inline keyboard for store selection with 5 available stores
+  - Toggle notifications on/off button
+  - `handleStoreChange()` - Handle store selection callback
+  - `handleToggleNotifications()` - Handle notification toggle callback
+- ✅ Enhanced `src/bot/handlers/callbackHandler.ts`:
+  - Updated `parseCallbackData()` to support store selection
+  - Handle favorite, unfavorite, hide, unhide callbacks
+  - Handle set_store and toggle_notifications callbacks
+  - Proper user feedback for all actions
+- ✅ Updated `src/bot/index.ts`:
+  - Register /deals, /favorites, /settings commands
+  - Fetch user's storeId from database for deals command
+- ✅ Updated `src/database/queries.ts`:
+  - Added `getActiveDealsWithProducts()` to get deals with product info
+  - Updated `getUserFavoriteDeals()` to join with products table
+
+### Files Created
+- `src/bot/commands/deals.ts` (78 lines)
+- `src/bot/commands/favorites.ts` (107 lines)
+- `src/bot/commands/settings.ts` (122 lines)
+
+### Files Modified
+- `src/bot/handlers/callbackHandler.ts` - Enhanced callback handling
+- `src/bot/index.ts` - Added command handlers
+- `src/database/queries.ts` - Added new query functions
+
+### Status
+All commands functional with interactive buttons. User preferences working. All type checks and build pass. Ready for Phase 10.
+
+---
