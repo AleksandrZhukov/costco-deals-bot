@@ -1,6 +1,6 @@
 import type TelegramBot from "node-telegram-bot-api";
 import { toggleFavorite } from "../commands/favorites.js";
-import { setDealHidden } from "../../database/queries.js";
+import { setDealHidden, addToCart, removeFromCart } from "../../database/queries.js";
 import { handleStoreChange, handleToggleNotifications } from "../commands/settings.js";
 import { handlePagination } from "../commands/deals.js";
 import { removeFromCartCallback, clearCartCallback } from "../commands/cart.js";
@@ -49,6 +49,8 @@ export function parseCallbackData(data: string): CallbackData | null {
       "page",
       "clearcart",
       "removecart",
+      "addcart",
+      "remcart",
     ];
 
     if (!validActions.includes(action)) {
@@ -61,11 +63,106 @@ export function parseCallbackData(data: string): CallbackData | null {
   }
 }
 
+async function addToCartCallback(
+  bot: TelegramBot,
+  callbackQueryId: string,
+  userId: number,
+  dealId: number,
+  callbackMessage?: any
+): Promise<void> {
+  const tracker = createUserActionTracker(userId);
+
+  try {
+    await addToCart(userId, dealId);
+
+    const keyboard = {
+      inline_keyboard: [
+        [
+          { text: "❤️ Favorite", callback_data: `favorite:${dealId}` },
+          { text: "👁️ Hide", callback_data: `hide:${dealId}` },
+        ],
+        [
+          { text: "✅ In Cart", callback_data: `remcart:${dealId}` },
+        ],
+      ],
+    };
+
+    if (callbackMessage) {
+      await bot.editMessageReplyMarkup(keyboard, {
+        chat_id: callbackMessage.chat.id,
+        message_id: callbackMessage.message_id,
+      });
+    }
+
+    await bot.answerCallbackQuery(callbackQueryId, {
+      text: "🛒 Deal added to cart!",
+    });
+
+    tracker.callback('addcart', {
+      deal_id: String(dealId),
+    });
+  } catch (error) {
+    console.error("Error adding to cart:", error);
+    await bot.answerCallbackQuery(callbackQueryId, {
+      text: "❌ Failed to add item to cart",
+      show_alert: true,
+    });
+  }
+}
+
+async function removeCartFromDealCallback(
+  bot: TelegramBot,
+  callbackQueryId: string,
+  userId: number,
+  dealId: number,
+  callbackMessage?: any
+): Promise<void> {
+  const tracker = createUserActionTracker(userId);
+
+  try {
+    await removeFromCart(userId, dealId);
+
+    const keyboard = {
+      inline_keyboard: [
+        [
+          { text: "❤️ Favorite", callback_data: `favorite:${dealId}` },
+          { text: "👁️ Hide", callback_data: `hide:${dealId}` },
+        ],
+        [
+          { text: "🛒 Add to Cart", callback_data: `addcart:${dealId}` },
+        ],
+      ],
+    };
+
+    if (callbackMessage) {
+      await bot.editMessageReplyMarkup(keyboard, {
+        chat_id: callbackMessage.chat.id,
+        message_id: callbackMessage.message_id,
+      });
+    }
+
+    await bot.answerCallbackQuery(callbackQueryId, {
+      text: "🗑️ Deal removed from cart",
+    });
+
+    tracker.callback('remcart', {
+      deal_id: String(dealId),
+    });
+  } catch (error) {
+    console.error("Error removing from cart:", error);
+    await bot.answerCallbackQuery(callbackQueryId, {
+      text: "❌ Failed to remove item from cart",
+      show_alert: true,
+    });
+  }
+}
+
 export async function handleCallbackQuery(
   bot: TelegramBot,
   callbackQueryId: string,
   data: string,
-  userId: number
+  userId: number,
+  callbackMessage?: any
 ): Promise<void> {
   const callbackData = parseCallbackData(data);
 
@@ -147,6 +244,18 @@ export async function handleCallbackQuery(
     case "removecart":
       if (callbackData.dealId) {
         await removeFromCartCallback(bot, callbackQueryId, userId, callbackData.dealId);
+      }
+      break;
+
+    case "addcart":
+      if (callbackData.dealId) {
+        await addToCartCallback(bot, callbackQueryId, userId, callbackData.dealId, callbackMessage);
+      }
+      break;
+
+    case "remcart":
+      if (callbackData.dealId) {
+        await removeCartFromDealCallback(bot, callbackQueryId, userId, callbackData.dealId, callbackMessage);
       }
       break;
 

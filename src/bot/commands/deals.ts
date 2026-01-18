@@ -1,6 +1,7 @@
 import type TelegramBot from "node-telegram-bot-api";
 import { getActiveDealsWithProducts, getTotalActiveDealsCount } from "../../database/queries.js";
 import { isDealHiddenForUser } from "../../database/queries.js";
+import { isInCart } from "../../database/queries.js";
 import { formatDealMessage } from "../../utils/formatters.js";
 import { createUserActionTracker } from "../../utils/logger.js";
 
@@ -66,6 +67,8 @@ export async function handleDealsCommand(
     }
 
     for (const { deal, products, message } of visibleDeals) {
+      const inCart = await isInCart(chatId, deal.id);
+      
       const keyboard = {
         inline_keyboard: [
           [
@@ -76,6 +79,12 @@ export async function handleDealsCommand(
             {
               text: "👁️ Hide",
               callback_data: `hide:${deal.id}`,
+            },
+          ],
+          [
+            {
+              text: inCart ? "✅ In Cart" : "🛒 Add to Cart",
+              callback_data: inCart ? `remcart:${deal.id}` : `addcart:${deal.id}`,
             },
           ],
         ],
