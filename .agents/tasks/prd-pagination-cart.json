@@ -25,8 +25,16 @@
     "auth": "Telegram User ID"
   },
   "routes": [
-    { "path": "/deals", "name": "Deals Command", "purpose": "List deals with pagination" },
-    { "path": "/cart", "name": "Cart Command", "purpose": "View and manage shopping cart" }
+    {
+      "path": "/deals",
+      "name": "Deals Command",
+      "purpose": "List deals with pagination"
+    },
+    {
+      "path": "/cart",
+      "name": "Cart Command",
+      "purpose": "View and manage shopping cart"
+    }
   ],
   "uiNotes": [
     "Deals: Show 10 items, then 'Show More' button",
@@ -36,7 +44,12 @@
   "dataModel": [
     {
       "entity": "user_shopping_cart",
-      "fields": ["id", "user_telegram_id", "deal_id", "added_at"],
+      "fields": [
+        "id",
+        "user_telegram_id",
+        "deal_id",
+        "added_at"
+      ],
       "notes": "Unique constraint on (user_telegram_id, deal_id)"
     }
   ],
@@ -57,7 +70,7 @@
     {
       "id": "US-001",
       "title": "Database Schema for Shopping Cart",
-      "status": "open",
+      "status": "completed",
       "dependsOn": [],
       "description": "As a developer, I want to add the shopping cart table to the database so users can store items.",
       "acceptanceCriteria": [
@@ -67,13 +80,17 @@
         "Run 'npm run db:generate' to create migration file",
         "Verify migration file is created in 'drizzle' folder (or equivalent)",
         "Negative case: Duplicate insert should fail (handled by unique constraint)"
-      ]
+      ],
+      "completedAt": "2026-01-18T21:59:35Z",
+      "updatedAt": "2026-01-18T21:59:35Z"
     },
     {
       "id": "US-002",
       "title": "Database Queries for Cart & Pagination",
       "status": "open",
-      "dependsOn": ["US-001"],
+      "dependsOn": [
+        "US-001"
+      ],
       "description": "As a developer, I want to implement the necessary database functions for cart management and paginated deal fetching.",
       "acceptanceCriteria": [
         "Update 'src/database/queries.ts'",
@@ -91,7 +108,9 @@
       "id": "US-003",
       "title": "Implement Deal Pagination",
       "status": "open",
-      "dependsOn": ["US-002"],
+      "dependsOn": [
+        "US-002"
+      ],
       "description": "As a user, I want to see deals in pages of 10 so the chat isn't flooded.",
       "acceptanceCriteria": [
         "Update 'src/bot/commands/deals.ts' to support pagination",
@@ -107,7 +126,9 @@
       "id": "US-004",
       "title": "Implement /cart Command",
       "status": "open",
-      "dependsOn": ["US-002"],
+      "dependsOn": [
+        "US-002"
+      ],
       "description": "As a user, I want to view my shopping cart so I can see what I plan to buy.",
       "acceptanceCriteria": [
         "Create 'src/bot/commands/cart.ts'",
@@ -124,7 +145,9 @@
       "id": "US-005",
       "title": "Deal Interaction Buttons",
       "status": "open",
-      "dependsOn": ["US-002"],
+      "dependsOn": [
+        "US-002"
+      ],
       "description": "As a user, I want to add/remove deals to/from my cart directly from the deal feed.",
       "acceptanceCriteria": [
         "Update 'src/bot/commands/deals.ts' deal message format",
@@ -139,7 +162,9 @@
       "id": "US-006",
       "title": "Cart Summary View",
       "status": "open",
-      "dependsOn": ["US-004"],
+      "dependsOn": [
+        "US-004"
+      ],
       "description": "As a user, I want a compact text summary of my cart for easy checking while shopping.",
       "acceptanceCriteria": [
         "Add '📋 Show Summary' button to '/cart' view",
