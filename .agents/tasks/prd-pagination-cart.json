@@ -129,7 +129,7 @@
     {
       "id": "US-004",
       "title": "Implement /cart Command",
-      "status": "open",
+      "status": "completed",
       "dependsOn": [
         "US-002"
       ],
@@ -143,7 +143,9 @@
         "Add '🗑️ Remove' button for each item",
         "Add '🧹 Clear Cart' button at the bottom",
         "Handle 'clearcart' callback in 'src/bot/handlers/callbackHandler.ts'"
-      ]
+      ],
+      "completedAt": "2026-01-18T22:06:07Z",
+      "updatedAt": "2026-01-18T22:06:07Z"
     },
     {
       "id": "US-005",
