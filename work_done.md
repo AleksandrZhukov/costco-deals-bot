@@ -479,3 +479,29 @@ None
 Status: Story completed. All acceptance criteria implemented.
 ---
 
+
+
+## US-002: Define Wide Event Types ✅
+**Commit:** `[main bd56790] feat: US-002 - Define Wide Event Types
+ 4 files changed, 574 insertions(+), 1 deletion(-)
+ create mode 100644 US-002-IMPLEMENTATION.md
+ create mode 100644 src/types/logging.ts
+ create mode 100644 src/utils/eventTypes.ts
+bd56790c97dc6c9d6f2b4aa1306a07becc09122c` | **Date:** Jan 18, 2026
+
+### Completed
+- ✅ Define Wide Event Types
+
+### Files Created
+- `US-002-IMPLEMENTATION.md`
+- `src/types/logging.ts`
+- `src/utils/eventTypes.ts`
+
+
+### Files Modified
+- `src/types/index.ts`
+
+
+Status: Story completed. All acceptance criteria implemented.
+---
+
