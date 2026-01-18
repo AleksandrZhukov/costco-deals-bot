@@ -1,4 +1,4 @@
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, count } from "drizzle-orm";
 import { db } from "../config/database.js";
 import { createDbQueryTracker, getAllQueryFrequencies } from "../utils/logger.js";
 import {
@@ -7,6 +7,7 @@ import {
   users,
   userDealPreferences,
   notificationLog,
+  userShoppingCart,
 } from "./schema.js";
 
 export async function logSlowQuery<T>(
@@ -243,19 +244,42 @@ export async function getDealWithProduct(dealId: number) {
   return result[0];
 }
 
-export async function getActiveDealsWithProducts() {
+export async function getActiveDealsWithProducts(limit?: number, offset?: number) {
   const result = await logSlowQuery(
     'getActiveDealsWithProducts',
-    () =>
-      db
+    () => {
+      const query = db
         .select()
         .from(deals)
         .leftJoin(products, eq(deals.productId, products.id))
         .where(eq(deals.isActive, true))
+        .orderBy(desc(deals.firstSeenAt));
+      
+      if (limit !== undefined) {
+        query.limit(limit);
+      }
+      
+      if (offset !== undefined) {
+        query.offset(offset);
+      }
+      
+      return query;
+    }
   );
 
   return result;
 }
+
+export async function getTotalActiveDealsCount(_storeId?: number, _userId?: number) {
+  const result = await db
+    .select({ count: count() })
+    .from(deals)
+    .where(eq(deals.isActive, true));
+
+  return result[0]?.count ?? 0;
+}
+
+
 
 export async function markDealsAsInactive(dealIds: number[]) {
   if (dealIds.length === 0) return [];
@@ -381,4 +405,64 @@ export async function getNotificationsByUser(userTelegramId: number) {
         .where(eq(notificationLog.userTelegramId, userTelegramId))
         .orderBy(desc(notificationLog.sentAt))
   );
+}
+
+// ============================================
+// Shopping Cart Operations
+// ============================================
+
+export async function addToCart(userTelegramId: number, dealId: number) {
+  const [item] = await db
+    .insert(userShoppingCart)
+    .values({ userTelegramId, dealId })
+    .onConflictDoNothing()
+    .returning();
+  return item;
+}
+
+export async function removeFromCart(userTelegramId: number, dealId: number) {
+  const result = await db
+    .delete(userShoppingCart)
+    .where(
+      and(
+        eq(userShoppingCart.userTelegramId, userTelegramId),
+        eq(userShoppingCart.dealId, dealId)
+      )
+    )
+    .returning();
+  return result[0];
+}
+
+export async function getUserCart(userTelegramId: number) {
+  return logSlowQuery(
+    'getUserCart',
+    () =>
+      db
+        .select()
+        .from(userShoppingCart)
+        .innerJoin(deals, eq(userShoppingCart.dealId, deals.id))
+        .leftJoin(products, eq(deals.productId, products.id))
+        .where(eq(userShoppingCart.userTelegramId, userTelegramId))
+        .orderBy(desc(userShoppingCart.addedAt))
+  );
+}
+
+export async function clearCart(userTelegramId: number) {
+  return db
+    .delete(userShoppingCart)
+    .where(eq(userShoppingCart.userTelegramId, userTelegramId))
+    .returning();
+}
+
+export async function isInCart(userTelegramId: number, dealId: number) {
+  const [item] = await db
+    .select()
+    .from(userShoppingCart)
+    .where(
+      and(
+        eq(userShoppingCart.userTelegramId, userTelegramId),
+        eq(userShoppingCart.dealId, dealId)
+      )
+    );
+  return !!item;
 }
