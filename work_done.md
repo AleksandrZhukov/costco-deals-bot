@@ -778,3 +778,23 @@ None
 Status: Story completed. All acceptance criteria implemented.
 ---
 
+
+
+## US-002: Database Queries for Cart & Pagination ✅
+**Commit:** `[main c6ebc61] feat: US-002 - Database Queries for Cart & Pagination
+ 1 file changed, 88 insertions(+), 4 deletions(-)
+c6ebc6156b641d08ec366ddfc50c50b4977cd912` | **Date:** Jan 18, 2026
+
+### Completed
+- ✅ Database Queries for Cart & Pagination
+
+### Files Created
+None
+
+### Files Modified
+- `src/database/queries.ts`
+
+
+Status: Story completed. All acceptance criteria implemented.
+---
+
