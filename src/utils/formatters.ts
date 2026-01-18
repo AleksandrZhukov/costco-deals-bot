@@ -56,7 +56,8 @@ export function formatDealMessage(
     const currentNum = parseFloat(deal.currentPrice || "0");
     if (!isNaN(sourceNum) && !isNaN(currentNum) && sourceNum > currentNum) {
       const saving = (sourceNum - currentNum).toFixed(2);
-      message += `\n📉 Save $${saving}`;
+      const percentage = ((sourceNum - currentNum) / sourceNum * 100).toFixed(0);
+      message += `\n📉 Save $${saving} (${percentage}%)`;
     }
   }
 
