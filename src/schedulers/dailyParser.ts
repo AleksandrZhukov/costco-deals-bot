@@ -103,5 +103,8 @@ export async function startScheduler(): Promise<cron.ScheduledTask | null> {
     console.error("❌ Failed to start scheduler");
   }
 
+  console.log("Running initial parse on startup...");
+  await runDailyParse({ manual: true });
+
   return task;
 }
