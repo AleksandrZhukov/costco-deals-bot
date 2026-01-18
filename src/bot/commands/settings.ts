@@ -3,6 +3,7 @@ import { getUserByTelegramId } from "../../database/queries.js";
 import { updateUserStoreId } from "../../database/queries.js";
 import { updateUserNotifications } from "../../database/queries.js";
 import { createUserActionTracker } from "../../utils/logger.js";
+import { runDailyParse } from "../../schedulers/dailyParser.js";
 
 const AVAILABLE_STORES = [
   { id: 25, name: "Calgary, AB" },
@@ -107,7 +108,19 @@ export async function handleStoreChange(
     });
 
     await updateUserStoreId(userId, storeId);
+
+    const storeName =
+      AVAILABLE_STORES.find((s) => s.id === storeId)?.name || "Unknown";
+
+    await bot.sendMessage(
+      userId,
+      `🔄 Fetching latest deals for *${storeName}*...\n\nPlease check your deals in about 1 minute.`,
+      { parse_mode: "Markdown" }
+    );
+
     await handleSettingsCommand(bot, userId);
+
+    await runDailyParse({ manual: true, storeId });
 
     tracker.settingsChanged('store', user.storeId, storeId);
   } catch (error) {
