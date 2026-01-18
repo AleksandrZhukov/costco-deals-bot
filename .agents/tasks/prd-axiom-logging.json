@@ -137,7 +137,7 @@
     {
       "id": "US-004",
       "title": "Application Lifecycle Logging",
-      "status": "open",
+      "status": "completed",
       "dependsOn": [
         "US-003"
       ],
@@ -149,7 +149,9 @@
         "Log uncaught errors and unhandled promise rejections",
         "Example: startup log includes environment, port, services initialized",
         "Negative case: startup failure should log error before process exits"
-      ]
+      ],
+      "completedAt": "2026-01-18T19:45:30Z",
+      "updatedAt": "2026-01-18T19:45:30Z"
     },
     {
       "id": "US-005",
