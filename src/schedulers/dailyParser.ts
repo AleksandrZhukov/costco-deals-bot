@@ -35,8 +35,8 @@ export async function runDailyParse(options: ParseJobOptions = {}): Promise<void
       try {
         const apiResult = await fetchDealsForStore({
           storeId,
-          page: 1,
-          pageSize: 100,
+          pageNum: 1,
+          pageSize: 1000,
         });
 
         if (!apiResult.success || !apiResult.deals) {

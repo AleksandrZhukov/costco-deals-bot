@@ -12,7 +12,7 @@ export const env = createEnv({
     TELEGRAM_BOT_TOKEN: z.string().min(1),
 
     // YEP Savings API
-    YEP_API_BASE_URL: z.string().url().default("https://www.yepsavings.com"),
+    YEP_API_BASE_URL: z.string().url().default("https://yepsavings.com"),
     YEP_API_COOKIE: z.string().default("ezoictest=stable"),
 
     // Scheduling

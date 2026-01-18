@@ -10,7 +10,7 @@ import {
 
 export interface FetchDealsOptions {
   storeId: number;
-  page?: number;
+  pageNum?: number;
   pageSize?: number;
 }
 
@@ -21,18 +21,21 @@ export interface FetchDealsResult {
   error?: string;
 }
 
-const API_PATH = "/api/deal/list";
+const API_PATH = "/api/customerPc/getProductList";
 
 export async function fetchDealsForStore(
   options: FetchDealsOptions
 ): Promise<FetchDealsResult> {
-  const { storeId, page = 1, pageSize = 20 } = options;
+  const { storeId, pageNum = 1, pageSize = 1000 } = options;
 
   try {
     const response = await yepApi.get(API_PATH, {
       params: {
+        userId: 0,
         storeId,
-        page,
+        goodsType: 0,
+        searchKey: "",
+        pageNum,
         pageSize,
       },
     });
