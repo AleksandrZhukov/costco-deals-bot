@@ -659,3 +659,24 @@ None
 Status: Story completed. All acceptance criteria implemented.
 ---
 
+
+
+## US-010: Database Query Logging ✅
+**Commit:** `[main c53de6d] feat: US-010 - Database Query Logging
+ 2 files changed, 112 insertions(+), 34 deletions(-)
+c53de6da522eb5a3bf52e097c71544be8484e4b7` | **Date:** Jan 18, 2026
+
+### Completed
+- ✅ Database Query Logging
+
+### Files Created
+None
+
+### Files Modified
+- `src/database/queries.ts`
+- `src/utils/logger.ts`
+
+
+Status: Story completed. All acceptance criteria implemented.
+---
+
