@@ -77,7 +77,7 @@ export async function handleCartCommand(
       ],
     };
 
-    await bot.sendMessage(chatId, "", {
+    await bot.sendMessage(chatId, "Manage your cart:", {
       reply_markup: actionKeyboard,
     });
 
