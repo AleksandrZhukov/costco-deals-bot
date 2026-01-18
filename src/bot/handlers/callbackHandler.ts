@@ -2,6 +2,7 @@ import type TelegramBot from "node-telegram-bot-api";
 import { toggleFavorite } from "../commands/favorites.js";
 import { setDealHidden } from "../../database/queries.js";
 import { handleStoreChange, handleToggleNotifications } from "../commands/settings.js";
+import { handlePagination } from "../commands/deals.js";
 import { createUserActionTracker } from "../../utils/logger.js";
 import { logError } from "../../utils/errorLogger.js";
 
@@ -9,6 +10,7 @@ export interface CallbackData {
   action: string;
   dealId?: number;
   storeId?: number;
+  offset?: number;
 }
 
 export function parseCallbackData(data: string): CallbackData | null {
@@ -28,6 +30,8 @@ export function parseCallbackData(data: string): CallbackData | null {
       if (!isNaN(id)) {
         if (action === "set_store") {
           result.storeId = id;
+        } else if (action === "page") {
+          result.offset = id;
         } else {
           result.dealId = id;
         }
@@ -41,6 +45,7 @@ export function parseCallbackData(data: string): CallbackData | null {
       "unhide",
       "set_store",
       "toggle_notifications",
+      "page",
     ];
 
     if (!validActions.includes(action)) {
@@ -119,6 +124,17 @@ export async function handleCallbackQuery(
 
     case "toggle_notifications":
       await handleToggleNotifications(bot, callbackQueryId, userId);
+      break;
+
+    case "page":
+      if (callbackData.offset !== undefined) {
+        await bot.answerCallbackQuery(callbackQueryId);
+        const { getUserByTelegramId } = await import("../../database/queries.js");
+        const user = await getUserByTelegramId(userId);
+        const storeId = user?.storeId ?? 25;
+        await handlePagination(bot, userId, storeId, callbackData.offset);
+        tracker.callback('page', { offset: String(callbackData.offset) });
+      }
       break;
 
     default:
