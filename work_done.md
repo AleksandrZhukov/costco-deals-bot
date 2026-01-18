@@ -865,3 +865,24 @@ None
 Status: Story completed. All acceptance criteria implemented.
 ---
 
+
+
+## US-006: Cart Summary View ✅
+**Commit:** `[main 6bd4fe9] feat: US-006 - Cart Summary View
+ 2 files changed, 107 insertions(+), 4 deletions(-)
+6bd4fe9a059984f385ab6897dfd8ef54fa542a35` | **Date:** Jan 18, 2026
+
+### Completed
+- ✅ Cart Summary View
+
+### Files Created
+None
+
+### Files Modified
+- `src/bot/commands/cart.ts`
+- `src/bot/handlers/callbackHandler.ts`
+
+
+Status: Story completed. All acceptance criteria implemented.
+---
+
