@@ -18,6 +18,11 @@ export const env = createEnv({
 
     // Node Environment
     NODE_ENV: z.enum(["development", "production", "test"]),
+
+    // Axiom Logging
+    AXIOM_TOKEN: z.string().min(1),
+    AXIOM_DATASET: z.string().default('costco-deals-bot'),
+    LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
   },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true,
