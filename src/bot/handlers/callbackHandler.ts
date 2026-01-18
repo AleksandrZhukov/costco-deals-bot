@@ -256,7 +256,6 @@ export async function handleCallbackQuery(
         const keyboard = {
           inline_keyboard: [
             [
-              { text: "❤️ Favorite", callback_data: `favorite:${callbackData.dealId}` },
               { text: "👁️ Unhide", callback_data: `unhide:${callbackData.dealId}` },
             ],
           ],
@@ -278,10 +277,11 @@ export async function handleCallbackQuery(
     case "unhide":
       if (callbackData.dealId) {
         const inCart = await isInCart(userId, callbackData.dealId);
+        const isFavorited = await isDealFavorited(userId, callbackData.dealId);
         const keyboard = {
           inline_keyboard: [
             [
-              { text: "❤️ Favorite", callback_data: `favorite:${callbackData.dealId}` },
+              { text: isFavorited ? "💔 Unfavorite" : "❤️ Favorite", callback_data: isFavorited ? `unfavorite:${callbackData.dealId}` : `favorite:${callbackData.dealId}` },
               { text: "👁️ Hide", callback_data: `hide:${callbackData.dealId}` },
             ],
             inCart
