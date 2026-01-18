@@ -554,3 +554,23 @@ None
 Status: Story completed. All acceptance criteria implemented.
 ---
 
+
+
+## US-005: API Call Logging ✅
+**Commit:** `[main cb96c21] feat: US-005 - API Call Logging
+ 1 file changed, 22 insertions(+), 1 deletion(-)
+cb96c21eca2978f4bc2e02fcf3b016ef72e93b08` | **Date:** Jan 18, 2026
+
+### Completed
+- ✅ API Call Logging
+
+### Files Created
+None
+
+### Files Modified
+- `src/services/yepApi/dealParser.ts`
+
+
+Status: Story completed. All acceptance criteria implemented.
+---
+
