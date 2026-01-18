@@ -141,8 +141,8 @@ async function processDeal(
     const isLatest = apiDeal.is_latest === 1;
 
     const updatedDeal = await updateDeal(apiDeal.id, {
-      currentPrice: apiDeal.cur_price,
-      sourcePrice: apiDeal.source_price,
+      currentPrice: apiDeal.cur_price || undefined,
+      sourcePrice: apiDeal.source_price || undefined,
       discountPrice: apiDeal.discount_price,
       discountType: apiDeal.discount_type,
       startTime: apiDeal.create_time ? new Date(apiDeal.create_time) : undefined,
@@ -166,8 +166,8 @@ async function processDeal(
   const newDeal = await createDeal({
     dealId: apiDeal.id,
     productId: product.id,
-    currentPrice: apiDeal.cur_price,
-    sourcePrice: apiDeal.source_price,
+    currentPrice: apiDeal.cur_price || undefined,
+    sourcePrice: apiDeal.source_price || undefined,
     discountPrice: apiDeal.discount_price,
     discountType: apiDeal.discount_type,
     startTime: apiDeal.create_time ? new Date(apiDeal.create_time) : undefined,
