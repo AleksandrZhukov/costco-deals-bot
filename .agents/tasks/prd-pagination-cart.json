@@ -169,7 +169,7 @@
     {
       "id": "US-006",
       "title": "Cart Summary View",
-      "status": "open",
+      "status": "completed",
       "dependsOn": [
         "US-004"
       ],
@@ -182,7 +182,9 @@
         "Show Total Price at bottom",
         "Add '⬅️ Back to Cart' button",
         "Ensure long names are truncated to keep formatting clean"
-      ]
+      ],
+      "completedAt": "2026-01-18T22:11:44Z",
+      "updatedAt": "2026-01-18T22:11:44Z"
     }
   ]
 }
