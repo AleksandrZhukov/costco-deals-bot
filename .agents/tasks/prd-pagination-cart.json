@@ -150,7 +150,7 @@
     {
       "id": "US-005",
       "title": "Deal Interaction Buttons",
-      "status": "open",
+      "status": "completed",
       "dependsOn": [
         "US-002"
       ],
@@ -162,7 +162,9 @@
         "Update 'src/bot/handlers/callbackHandler.ts' to handle 'addcart:<id>' and 'remcart:<id>'",
         "Ensure button state updates immediately upon clicking",
         "Apply same button logic to Notification Service if applicable"
-      ]
+      ],
+      "completedAt": "2026-01-18T22:09:48Z",
+      "updatedAt": "2026-01-18T22:09:48Z"
     },
     {
       "id": "US-006",
