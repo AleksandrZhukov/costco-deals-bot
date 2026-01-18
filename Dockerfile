@@ -1,3 +1,15 @@
+FROM node:24-alpine AS builder
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+
+RUN npm ci
+
+COPY . .
+
+RUN npm run build
+
 FROM node:24-alpine
 
 WORKDIR /app
@@ -6,11 +18,9 @@ COPY package.json package-lock.json ./
 
 RUN npm ci --only=production
 
-COPY . .
+COPY --from=builder /app/dist ./dist
 
-RUN npm run build
-
-RUN addgroup -g appuser && adduser -D -G appuser appuser
+RUN addgroup -g 1001 appuser && adduser -D -u 1001 -G appuser appuser
 RUN chown -R appuser:appuser /app
 USER appuser
 
