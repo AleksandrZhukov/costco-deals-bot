@@ -1,6 +1,5 @@
 import type TelegramBot from "node-telegram-bot-api";
-import { toggleFavorite } from "../commands/favorites.js";
-import { setDealHidden, addToCart, removeFromCart, isInCart } from "../../database/queries.js";
+import { setDealHidden, addToCart, removeFromCart, isInCart, setDealFavorite } from "../../database/queries.js";
 import { handleStoreChange, handleToggleNotifications } from "../commands/settings.js";
 import { handlePagination } from "../commands/deals.js";
 import { removeFromCartCallback, clearCartCallback, cartSummaryCallback } from "../commands/cart.js";
@@ -188,13 +187,63 @@ export async function handleCallbackQuery(
   switch (callbackData.action) {
     case "favorite":
       if (callbackData.dealId) {
-        await toggleFavorite(bot, callbackQueryId, userId, callbackData.dealId, true);
+        const inCart = await isInCart(userId, callbackData.dealId);
+        const keyboard = {
+          inline_keyboard: [
+            [
+              { text: "💔 Unfavorite", callback_data: `unfavorite:${callbackData.dealId}` },
+              { text: "👁️ Hide", callback_data: `hide:${callbackData.dealId}` },
+            ],
+            [
+              {
+                text: inCart ? "✅ In Cart" : "🛒 Add to Cart",
+                callback_data: inCart ? `remcart:${callbackData.dealId}` : `addcart:${callbackData.dealId}`,
+              },
+            ],
+          ],
+        };
+        if (callbackMessage) {
+          await bot.editMessageReplyMarkup(keyboard, {
+            chat_id: callbackMessage.chat.id,
+            message_id: callbackMessage.message_id,
+          });
+        }
+        await bot.answerCallbackQuery(callbackQueryId, {
+          text: "⭐ Deal added to favorites!",
+        });
+        await setDealFavorite(userId, callbackData.dealId, true);
+        tracker.callback('favorite', { deal_id: String(callbackData.dealId) });
       }
       break;
 
     case "unfavorite":
       if (callbackData.dealId) {
-        await toggleFavorite(bot, callbackQueryId, userId, callbackData.dealId, false);
+        const inCart = await isInCart(userId, callbackData.dealId);
+        const keyboard = {
+          inline_keyboard: [
+            [
+              { text: "❤️ Favorite", callback_data: `favorite:${callbackData.dealId}` },
+              { text: "👁️ Hide", callback_data: `hide:${callbackData.dealId}` },
+            ],
+            [
+              {
+                text: inCart ? "✅ In Cart" : "🛒 Add to Cart",
+                callback_data: inCart ? `remcart:${callbackData.dealId}` : `addcart:${callbackData.dealId}`,
+              },
+            ],
+          ],
+        };
+        if (callbackMessage) {
+          await bot.editMessageReplyMarkup(keyboard, {
+            chat_id: callbackMessage.chat.id,
+            message_id: callbackMessage.message_id,
+          });
+        }
+        await bot.answerCallbackQuery(callbackQueryId, {
+          text: "💔 Deal removed from favorites",
+        });
+        await setDealFavorite(userId, callbackData.dealId, false);
+        tracker.callback('unfavorite', { deal_id: String(callbackData.dealId) });
       }
       break;
 

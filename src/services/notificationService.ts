@@ -1,5 +1,5 @@
 import type TelegramBot from "node-telegram-bot-api";
-import { getDealWithProduct, isInCart } from "../database/queries.js";
+import { getDealWithProduct, isInCart, isDealFavorited } from "../database/queries.js";
 import { logNotification } from "../database/queries.js";
 import { formatDealMessage } from "../utils/formatters.js";
 import { createNotificationTracker, createBatchTracker } from "../utils/logger.js";
@@ -23,11 +23,15 @@ export async function sendDealNotification(
     const message = formatDealMessage(deal, product);
 
     const inCart = await isInCart(userTelegramId, dealId);
+    const isFavorited = await isDealFavorited(userTelegramId, dealId);
 
     const keyboard = {
       inline_keyboard: [
         [
-          { text: "❤️ Favorite", callback_data: `favorite:${dealId}` },
+          {
+            text: isFavorited ? "💔 Unfavorite" : "❤️ Favorite",
+            callback_data: isFavorited ? `unfavorite:${dealId}` : `favorite:${dealId}`,
+          },
           { text: "👁️ Hide", callback_data: `hide:${dealId}` },
         ],
         [

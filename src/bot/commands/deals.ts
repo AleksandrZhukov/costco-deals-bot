@@ -1,6 +1,6 @@
 import type TelegramBot from "node-telegram-bot-api";
 import { getActiveDealsWithProductsNotHidden, getTotalVisibleActiveDealsCount, getUserByTelegramId } from "../../database/queries.js";
-import { isInCart } from "../../database/queries.js";
+import { isInCart, isDealFavorited } from "../../database/queries.js";
 import { formatDealMessage } from "../../utils/formatters.js";
 import { createUserActionTracker } from "../../utils/logger.js";
 
@@ -65,13 +65,14 @@ export async function handleDealsCommand(
 
     for (const { deal, products, message } of visibleDeals) {
       const inCart = await isInCart(chatId, deal.id);
-      
+      const isFavorited = await isDealFavorited(chatId, deal.id);
+
       const keyboard = {
         inline_keyboard: [
           [
             {
-              text: "❤️ Favorite",
-              callback_data: `favorite:${deal.id}`,
+              text: isFavorited ? "💔 Unfavorite" : "❤️ Favorite",
+              callback_data: isFavorited ? `unfavorite:${deal.id}` : `favorite:${deal.id}`,
             },
             {
               text: "👁️ Hide",

@@ -401,6 +401,23 @@ export async function setDealFavorite(
   return pref;
 }
 
+export async function isDealFavorited(
+  userTelegramId: number,
+  dealId: number
+): Promise<boolean> {
+  const [pref] = await db
+    .select()
+    .from(userDealPreferences)
+    .where(
+      and(
+        eq(userDealPreferences.userTelegramId, userTelegramId),
+        eq(userDealPreferences.dealId, dealId)
+      )
+    );
+
+  return pref?.isFavorite ?? false;
+}
+
 export async function setDealHidden(
   userTelegramId: number,
   dealId: number,
