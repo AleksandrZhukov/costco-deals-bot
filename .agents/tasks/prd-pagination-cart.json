@@ -109,7 +109,7 @@
     {
       "id": "US-003",
       "title": "Implement Deal Pagination",
-      "status": "open",
+      "status": "completed",
       "dependsOn": [
         "US-002"
       ],
@@ -122,7 +122,9 @@
         "Clicking 'Show More' edits the message or sends next batch (per plan: edits/appends)",
         "Show count text: 'Showing X-Y of Z deals'",
         "Verify pagination works for <10, =10, and >10 deals"
-      ]
+      ],
+      "completedAt": "2026-01-18T22:04:19Z",
+      "updatedAt": "2026-01-18T22:04:19Z"
     },
     {
       "id": "US-004",
