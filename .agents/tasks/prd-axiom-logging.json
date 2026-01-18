@@ -266,7 +266,7 @@
     {
       "id": "US-011",
       "title": "Create Logging Documentation",
-      "status": "open",
+      "status": "completed",
       "dependsOn": [
         "US-010"
       ],
@@ -277,7 +277,9 @@
         "Create docs/AXIOM_QUERIES.md with example queries for common debugging tasks",
         "Example: docs show how to log a new event type with full code example",
         "Negative case: docs should warn about not logging sensitive data"
-      ]
+      ],
+      "completedAt": "2026-01-18T20:05:13Z",
+      "updatedAt": "2026-01-18T20:05:13Z"
     },
     {
       "id": "US-012",
