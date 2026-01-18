@@ -302,7 +302,25 @@ export function createUserActionTracker(userId: number) {
   };
 }
 
-export function createDbQueryTracker(queryName: string, slowThreshold: number = 100) {
+const queryFrequencyMap = new Map<string, number>();
+
+export function getQueryFrequency(queryName: string): number {
+  return queryFrequencyMap.get(queryName) || 0;
+}
+
+export function getAllQueryFrequencies(): Record<string, number> {
+  return Object.fromEntries(queryFrequencyMap);
+}
+
+export function resetQueryFrequency(queryName: string): void {
+  queryFrequencyMap.set(queryName, 0);
+}
+
+export function resetAllQueryFrequencies(): void {
+  queryFrequencyMap.clear();
+}
+
+export function createDbQueryTracker(queryName: string, queryText?: string, slowThreshold: number = 1000) {
   const correlationId = generateCorrelationId();
   const startTime = Date.now();
 
@@ -311,15 +329,25 @@ export function createDbQueryTracker(queryName: string, slowThreshold: number = 
       const duration = Date.now() - startTime;
 
       if (duration > slowThreshold) {
+        const frequency = (queryFrequencyMap.get(queryName) || 0) + 1;
+        queryFrequencyMap.set(queryName, frequency);
+
         log.warn(EventTypes.DB_QUERY, {
           query_name: queryName,
+          query_text: queryText,
           duration_ms: duration,
           slow_query: true,
+          threshold_ms: slowThreshold,
+          frequency,
         }, { correlation_id: correlationId });
       } else {
+        const frequency = (queryFrequencyMap.get(queryName) || 0) + 1;
+        queryFrequencyMap.set(queryName, frequency);
+
         log.debug(EventTypes.DB_QUERY, {
           query_name: queryName,
           duration_ms: duration,
+          slow_query: false,
         }, { correlation_id: correlationId });
       }
     },
@@ -327,6 +355,7 @@ export function createDbQueryTracker(queryName: string, slowThreshold: number = 
     error: (errorMessage: string) => {
       log.error(EventTypes.DB_ERROR, {
         query_name: queryName,
+        query_text: queryText,
         duration_ms: Date.now() - startTime,
         error_message: errorMessage,
       }, { correlation_id: correlationId });

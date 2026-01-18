@@ -1,5 +1,6 @@
 import { eq, and, desc } from "drizzle-orm";
 import { db } from "../config/database.js";
+import { createDbQueryTracker, getAllQueryFrequencies } from "../utils/logger.js";
 import {
   products,
   deals,
@@ -7,6 +8,28 @@ import {
   userDealPreferences,
   notificationLog,
 } from "./schema.js";
+
+export async function logSlowQuery<T>(
+  queryName: string,
+  queryFn: () => Promise<T>,
+  slowThreshold: number = 1000
+): Promise<T> {
+  const tracker = createDbQueryTracker(queryName, undefined, slowThreshold);
+
+  try {
+    const result = await queryFn();
+    tracker.complete();
+    return result;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    tracker.error(errorMessage);
+    throw error;
+  }
+}
+
+export function getQueryFrequencyStats(): Record<string, number> {
+  return getAllQueryFrequencies();
+}
 
 // ============================================
 // User CRUD Operations
@@ -69,11 +92,17 @@ export async function updateUserLastActive(telegramId: number) {
 }
 
 export async function getAllActiveUsers() {
-  return db.select().from(users).where(eq(users.notificationsEnabled, true));
+  return logSlowQuery(
+    'getAllActiveUsers',
+    () => db.select().from(users).where(eq(users.notificationsEnabled, true))
+  );
 }
 
 export async function getUsersByStoreId(storeId: number) {
-  return db.select().from(users).where(eq(users.storeId, storeId));
+  return logSlowQuery(
+    'getUsersByStoreId',
+    () => db.select().from(users).where(eq(users.storeId, storeId))
+  );
 }
 
 // ============================================
@@ -189,29 +218,41 @@ export async function getActiveDeals() {
 }
 
 export async function getLatestDeals() {
-  return db
-    .select()
-    .from(deals)
-    .where(and(eq(deals.isActive, true), eq(deals.isLatest, true)))
-    .orderBy(desc(deals.firstSeenAt));
+  return logSlowQuery(
+    'getLatestDeals',
+    () =>
+      db
+        .select()
+        .from(deals)
+        .where(and(eq(deals.isActive, true), eq(deals.isLatest, true)))
+        .orderBy(desc(deals.firstSeenAt))
+  );
 }
 
 export async function getDealWithProduct(dealId: number) {
-  const result = await db
-    .select()
-    .from(deals)
-    .leftJoin(products, eq(deals.productId, products.id))
-    .where(eq(deals.id, dealId));
+  const result = await logSlowQuery(
+    'getDealWithProduct',
+    () =>
+      db
+        .select()
+        .from(deals)
+        .leftJoin(products, eq(deals.productId, products.id))
+        .where(eq(deals.id, dealId))
+  );
 
   return result[0];
 }
 
 export async function getActiveDealsWithProducts() {
-  const result = await db
-    .select()
-    .from(deals)
-    .leftJoin(products, eq(deals.productId, products.id))
-    .where(eq(deals.isActive, true));
+  const result = await logSlowQuery(
+    'getActiveDealsWithProducts',
+    () =>
+      db
+        .select()
+        .from(deals)
+        .leftJoin(products, eq(deals.productId, products.id))
+        .where(eq(deals.isActive, true))
+  );
 
   return result;
 }
@@ -271,17 +312,21 @@ export async function setDealHidden(
 }
 
 export async function getUserFavoriteDeals(userTelegramId: number) {
-  return db
-    .select()
-    .from(userDealPreferences)
-    .leftJoin(deals, eq(userDealPreferences.dealId, deals.id))
-    .leftJoin(products, eq(deals.productId, products.id))
-    .where(
-      and(
-        eq(userDealPreferences.userTelegramId, userTelegramId),
-        eq(userDealPreferences.isFavorite, true)
-      )
-    );
+  return logSlowQuery(
+    'getUserFavoriteDeals',
+    () =>
+      db
+        .select()
+        .from(userDealPreferences)
+        .leftJoin(deals, eq(userDealPreferences.dealId, deals.id))
+        .leftJoin(products, eq(deals.productId, products.id))
+        .where(
+          and(
+            eq(userDealPreferences.userTelegramId, userTelegramId),
+            eq(userDealPreferences.isFavorite, true)
+          )
+        )
+  );
 }
 
 export async function getUserHiddenDeals(userTelegramId: number) {
@@ -327,9 +372,13 @@ export async function logNotification(data: {
 }
 
 export async function getNotificationsByUser(userTelegramId: number) {
-  return db
-    .select()
-    .from(notificationLog)
-    .where(eq(notificationLog.userTelegramId, userTelegramId))
-    .orderBy(desc(notificationLog.sentAt));
+  return logSlowQuery(
+    'getNotificationsByUser',
+    () =>
+      db
+        .select()
+        .from(notificationLog)
+        .where(eq(notificationLog.userTelegramId, userTelegramId))
+        .orderBy(desc(notificationLog.sentAt))
+  );
 }
