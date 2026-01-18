@@ -414,3 +414,48 @@ Cron job replaced with HTTP endpoints. Ready for external cron-job.org schedulin
 
 ---
 
+## Phase 13: Telegram Webhook Implementation ✅
+**Commit:** `16f005a` | **Date:** Jan 18, 2026
+
+### Completed
+- ✅ Added webhook mode with polling fallback based on NODE_ENV:
+  - Production mode (`NODE_ENV=production`) → uses webhook mode
+  - Development mode (`NODE_ENV=development`) → uses polling mode
+- ✅ Updated `src/config/env.ts`:
+  - Added `WEBHOOK_URL` environment variable (default: `https://costco-deals-bot.onrender.com`)
+- ✅ Enhanced `src/config/telegram.ts`:
+  - Modified `createBot()` to use conditional polling based on NODE_ENV
+  - Added `setupWebhook()` function to configure Telegram webhook
+  - Exported `isWebhookMode` flag for conditional logic
+- ✅ Updated `src/bot/index.ts`:
+  - Added conditional polling error handler (development only)
+  - Removed polling error handler in webhook mode
+- ✅ Enhanced `src/index.ts`:
+  - Added POST `/webhook/telegram` endpoint for Telegram webhook updates
+  - Implemented JSON body parsing for webhook payloads
+  - Added `bot.processUpdate()` to handle webhook updates
+  - Added conditional webhook setup on startup (production only)
+  - Enhanced startup logging to show bot mode and active endpoints
+- ✅ Updated `.env.example`:
+  - Added WEBHOOK_URL variable documentation
+  - Added NODE_ENV mode explanation (development→polling, production→webhook)
+
+### Implementation Details
+- Webhook endpoint only active in production mode
+- Seamless switching between polling and webhook based on environment
+- Proper error handling for webhook requests (400 Bad Request on parse errors)
+- Webhook URL format: `https://costco-deals-bot.onrender.com/webhook/telegram`
+- Backward compatible with existing polling mode for development
+
+### Files Modified
+- `src/config/env.ts` - Added WEBHOOK_URL environment variable
+- `.env.example` - Added webhook URL and mode documentation
+- `src/config/telegram.ts` - Added webhook setup and mode detection
+- `src/bot/index.ts` - Added conditional polling error handler
+- `src/index.ts` - Added webhook endpoint and conditional initialization
+
+### Status
+Webhook mode implemented with polling fallback. Production uses webhook, development uses polling. All type checks pass. Ready for Render deployment with Telegram webhook.
+
+---
+
