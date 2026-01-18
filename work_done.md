@@ -842,3 +842,26 @@ Status: Story completed. All acceptance criteria implemented.
 Status: Story completed. All acceptance criteria implemented.
 ---
 
+
+
+## US-005: Deal Interaction Buttons ✅
+**Commit:** `[main 615fc8b] feat: US-005 - Deal Interaction Buttons
+ 4 files changed, 131 insertions(+), 5 deletions(-)
+615fc8b7c70641ed94886555a0321b0317996158` | **Date:** Jan 18, 2026
+
+### Completed
+- ✅ Deal Interaction Buttons
+
+### Files Created
+None
+
+### Files Modified
+- `src/bot/commands/deals.ts`
+- `src/bot/handlers/callbackHandler.ts`
+- `src/bot/index.ts`
+- `src/services/notificationService.ts`
+
+
+Status: Story completed. All acceptance criteria implemented.
+---
+
