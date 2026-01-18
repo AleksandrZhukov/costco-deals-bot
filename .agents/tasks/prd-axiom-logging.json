@@ -230,7 +230,7 @@
     {
       "id": "US-009",
       "title": "Job Execution Logging",
-      "status": "open",
+      "status": "completed",
       "dependsOn": [
         "US-003"
       ],
@@ -241,7 +241,9 @@
         "Log job failures with error details and next scheduled run",
         "Example: job completion log shows 'processed 100 deals in 5.2s, 0 errors'",
         "Negative case: job crash should log stack trace and partial progress"
-      ]
+      ],
+      "completedAt": "2026-01-18T19:57:34Z",
+      "updatedAt": "2026-01-18T19:57:34Z"
     },
     {
       "id": "US-010",
