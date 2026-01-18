@@ -1,6 +1,6 @@
 import type TelegramBot from "node-telegram-bot-api";
 import { toggleFavorite } from "../commands/favorites.js";
-import { setDealHidden, addToCart, removeFromCart } from "../../database/queries.js";
+import { setDealHidden, addToCart, removeFromCart, isInCart } from "../../database/queries.js";
 import { handleStoreChange, handleToggleNotifications } from "../commands/settings.js";
 import { handlePagination } from "../commands/deals.js";
 import { removeFromCartCallback, clearCartCallback, cartSummaryCallback } from "../commands/cart.js";
@@ -224,12 +224,16 @@ export async function handleCallbackQuery(
 
     case "unhide":
       if (callbackData.dealId) {
+        const inCart = await isInCart(userId, callbackData.dealId);
         const keyboard = {
           inline_keyboard: [
             [
               { text: "❤️ Favorite", callback_data: `favorite:${callbackData.dealId}` },
               { text: "👁️ Hide", callback_data: `hide:${callbackData.dealId}` },
             ],
+            inCart
+              ? [{ text: "✅ In Cart", callback_data: `remcart:${callbackData.dealId}` }]
+              : [{ text: "🛒 Add to Cart", callback_data: `addcart:${callbackData.dealId}` }],
           ],
         };
         if (callbackMessage) {
