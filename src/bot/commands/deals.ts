@@ -4,6 +4,17 @@ import { isInCart, isDealFavorited } from "../../database/queries.js";
 import { formatDealMessage } from "../../utils/formatters.js";
 import { createUserActionTracker } from "../../utils/logger.js";
 
+const AVAILABLE_STORES = [
+  { id: 25, name: "Calgary, AB" },
+  { id: 28, name: "Edmonton, AB" },
+  { id: 34, name: "Langley, BC" },
+  { id: 30, name: "Burlington, ON" },
+  { id: 29, name: "London, ON" },
+  { id: 23, name: "Mississauga & Oakville, ON" },
+  { id: 31, name: "Toronto, ON" },
+  { id: 19, name: "Saskatoon, SK" },
+];
+
 const PAGE_SIZE = 10;
 
 export async function handleDealsCommand(
@@ -47,9 +58,10 @@ export async function handleDealsCommand(
     }
 
     const startCount = offset + 1;
+    const storeName = AVAILABLE_STORES.find((s) => s.id === user.storeId)?.name || "Unknown";
 
     if (offset === 0) {
-      await bot.sendMessage(chatId, `📋 Found ${totalCount} active deals:`);
+      await bot.sendMessage(chatId, `📋 Found ${totalCount} active deals for ${storeName}:`);
     }
 
     const visibleDeals: Array<{ deal: any; products: any; message: string }> = [];
