@@ -24,7 +24,6 @@ Thumbs.db
 *.swo
 
 # Drizzle
-drizzle/
 /.ralph/
 /.opencode/
 /.agents/ralph/
