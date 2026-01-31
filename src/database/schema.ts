@@ -160,6 +160,27 @@ export const userDealTypePreferences = pgTable(
   })
 );
 
+// User digest history table
+export const userDigestHistory = pgTable(
+  "user_digest_history",
+  {
+    id: serial("id").primaryKey(),
+    userTelegramId: bigint("user_telegram_id", { mode: "number" }).notNull(),
+    dealId: integer("deal_id")
+      .references(() => deals.id, { onDelete: "cascade" }),
+    sentAt: timestamp("sent_at").defaultNow(),
+  },
+  (table) => ({
+    uniqueUserDeal: unique("unique_user_deal_digest").on(
+      table.userTelegramId,
+      table.dealId
+    ),
+    userIdx: index("idx_digest_history_user").on(table.userTelegramId),
+    dealIdx: index("idx_digest_history_deal").on(table.dealId),
+    sentAtIdx: index("idx_digest_history_sent_at").on(table.sentAt),
+  })
+);
+
 // Relations
 export const productsRelations = relations(products, ({ many }) => ({
   deals: many(deals),
@@ -173,6 +194,7 @@ export const dealsRelations = relations(deals, ({ one, many }) => ({
   userPreferences: many(userDealPreferences),
   notifications: many(notificationLog),
   shoppingCartItems: many(userShoppingCart),
+  digestHistory: many(userDigestHistory),
 }));
 
 export const userDealPreferencesRelations = relations(
@@ -211,6 +233,16 @@ export const userDealTypePreferencesRelations = relations(
     user: one(users, {
       fields: [userDealTypePreferences.userTelegramId],
       references: [users.telegramId],
+    }),
+  })
+);
+
+export const userDigestHistoryRelations = relations(
+  userDigestHistory,
+  ({ one }) => ({
+    deal: one(deals, {
+      fields: [userDigestHistory.dealId],
+      references: [deals.id],
     }),
   })
 );

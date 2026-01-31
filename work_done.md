@@ -916,3 +916,42 @@ Status: Story completed. All acceptance criteria implemented.
 Feature complete. Users can now filter deals by Food, Clothing, and Non-Food types.
 
 ---
+
+## Feature: Deal Notifications (Daily Digest & Instant Favorites) ✅
+**Date:** Jan 31, 2026
+
+### Completed
+- ✅ Implemented Daily Digest system
+  - Created `user_digest_history` table to track sent deals
+  - Implemented `sendDailyDigestToUser` service with pagination support
+  - Implemented `sendDailyDigestToAllUsers` for batch processing
+- ✅ Implemented Instant Notifications for Favorite Deals
+  - Detects when a favorited deal reappears/updates
+  - Sends immediate notification to interested users
+  - Respects user's "Hidden" preferences
+- ✅ Integrated with Daily Parser Job
+  - Automatically triggers instant notifications for new deals
+  - Automatically triggers daily digest for all active users after parsing
+- ✅ Added "Show More" pagination for Digest messages
+  - Interactive button to load next batch of deals
+  - Handled via callback query `digest:OFFSET`
+- ✅ Implemented Rate Limiting
+  - 1.5s delay between user notifications
+  - 300ms delay between digest messages
+- ✅ Comprehensive Logging
+  - Logged notification batches and failures using Axiom logger
+
+### Files Created
+- `drizzle/0003_add_user_digest_history.sql`
+- `src/services/digestService.ts`
+- `src/bot/handlers/digestCallbackHandler.ts`
+
+### Files Modified
+- `src/database/schema.ts` - Added `userDigestHistory` table
+- `src/database/queries.ts` - Added digest-related queries
+- `src/services/index.ts` - Exported digest service
+- `src/schedulers/dailyParser.ts` - Integrated notification logic
+- `src/bot/handlers/callbackHandler.ts` - Added `digest` callback handling
+
+### Status
+Feature complete. Bot now proactively notifies users of new deals and reappearing favorites.

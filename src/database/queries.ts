@@ -9,6 +9,7 @@ import {
   notificationLog,
   userShoppingCart,
   userDealTypePreferences,
+  userDigestHistory,
 } from "./schema.js";
 
 export async function logSlowQuery<T>(
@@ -623,4 +624,133 @@ export async function clearUserDealTypePreferences(userTelegramId: number): Prom
   await db
     .delete(userDealTypePreferences)
     .where(eq(userDealTypePreferences.userTelegramId, userTelegramId));
+}
+
+// ============================================
+// Digest & Notification Operations
+// ============================================
+
+export async function getDealsForDigest(
+  userTelegramId: number,
+  limit?: number,
+  offset?: number,
+  typeIds?: number[]
+) {
+  const user = await getUserByTelegramId(userTelegramId);
+  if (!user?.storeId) return [];
+
+  const conditions: (ReturnType<typeof eq> | ReturnType<typeof and> | ReturnType<typeof or> | ReturnType<typeof isNull> | ReturnType<typeof inArray>)[] = [
+    eq(deals.isActive, true),
+    eq(deals.storeId, user.storeId),
+    // Not hidden
+    or(
+      isNull(userDealPreferences.id),
+      eq(userDealPreferences.isHidden, false)
+    ),
+    // Not favorited (optional based on plan, plan says "NOT favorited by user")
+    or(
+      isNull(userDealPreferences.id),
+      eq(userDealPreferences.isFavorite, false)
+    ),
+    // Not already sent in digest
+    isNull(userDigestHistory.id),
+  ];
+
+  if (typeIds && typeIds.length > 0) {
+    conditions.push(inArray(products.goodsType, typeIds));
+  }
+
+  const query = db
+    .select()
+    .from(deals)
+    .innerJoin(products, eq(deals.productId, products.id))
+    .leftJoin(userDealPreferences, and(
+      eq(userDealPreferences.dealId, deals.id),
+      eq(userDealPreferences.userTelegramId, userTelegramId)
+    ))
+    .leftJoin(userDigestHistory, and(
+      eq(userDigestHistory.dealId, deals.id),
+      eq(userDigestHistory.userTelegramId, userTelegramId)
+    ))
+    .where(and(...conditions))
+    .orderBy(desc(deals.firstSeenAt));
+
+  if (limit !== undefined) query.limit(limit);
+  if (offset !== undefined) query.offset(offset);
+
+  return logSlowQuery('getDealsForDigest', () => query);
+}
+
+export async function getTotalDealsForDigestCount(
+  userTelegramId: number,
+  typeIds?: number[]
+) {
+  const user = await getUserByTelegramId(userTelegramId);
+  if (!user?.storeId) return 0;
+
+  const conditions: (ReturnType<typeof eq> | ReturnType<typeof and> | ReturnType<typeof or> | ReturnType<typeof isNull> | ReturnType<typeof inArray>)[] = [
+    eq(deals.isActive, true),
+    eq(deals.storeId, user.storeId),
+    or(isNull(userDealPreferences.id), eq(userDealPreferences.isHidden, false)),
+    or(isNull(userDealPreferences.id), eq(userDealPreferences.isFavorite, false)),
+    isNull(userDigestHistory.id),
+  ];
+
+  if (typeIds && typeIds.length > 0) {
+    conditions.push(inArray(products.goodsType, typeIds));
+  }
+
+  const result = await db
+    .select({ count: count() })
+    .from(deals)
+    .innerJoin(products, eq(deals.productId, products.id))
+    .leftJoin(userDealPreferences, and(
+      eq(userDealPreferences.dealId, deals.id),
+      eq(userDealPreferences.userTelegramId, userTelegramId)
+    ))
+    .leftJoin(userDigestHistory, and(
+      eq(userDigestHistory.dealId, deals.id),
+      eq(userDigestHistory.userTelegramId, userTelegramId)
+    ))
+    .where(and(...conditions));
+
+  return result[0]?.count ?? 0;
+}
+
+export async function markDealAsSentInDigest(userTelegramId: number, dealId: number) {
+  await db
+    .insert(userDigestHistory)
+    .values({ userTelegramId, dealId })
+    .onConflictDoNothing();
+}
+
+export async function wasDealSentInDigest(userTelegramId: number, dealId: number) {
+  const [entry] = await db
+    .select()
+    .from(userDigestHistory)
+    .where(and(
+      eq(userDigestHistory.userTelegramId, userTelegramId),
+      eq(userDigestHistory.dealId, dealId)
+    ));
+  return !!entry;
+}
+
+export async function getUsersWhoFavoritedDeal(dealId: number) {
+  // We need to join with users table to get storeId if we want to filter by active users only?
+  // Or just rely on preferences. 
+  // Requirement: "Recipients: Users who favorited that deal"
+  // Requirement: "Filters: Skip if user has hidden the deal"
+  
+  // Let's get users who have isFavorite=true and isHidden=false
+  return db
+    .select({
+      userTelegramId: userDealPreferences.userTelegramId,
+      // We might need user details later, but for now just IDs
+    })
+    .from(userDealPreferences)
+    .where(and(
+      eq(userDealPreferences.dealId, dealId),
+      eq(userDealPreferences.isFavorite, true),
+      eq(userDealPreferences.isHidden, false)
+    ));
 }

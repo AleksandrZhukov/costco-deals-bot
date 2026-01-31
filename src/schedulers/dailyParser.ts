@@ -1,8 +1,14 @@
 import { fetchDealsForStore } from "../services/yepApi/index.js";
-import { processDealsFromApi, expireExpiredDeals } from "../services/index.js";
+import {
+  processDealsFromApi,
+  expireExpiredDeals,
+  sendInstantFavoriteNotification,
+  sendDailyDigestToAllUsers,
+} from "../services/index.js";
 import { getAllActiveUsers, hasActiveDealsForStore } from "../database/queries.js";
 import { createJobTracker } from "../utils/logger.js";
 import { logError } from "../utils/errorLogger.js";
+import { bot } from "../config/telegram.js";
 
 interface ParseJobOptions {
   manual?: boolean;
@@ -68,6 +74,11 @@ export async function runDailyParse(options: ParseJobOptions = {}): Promise<void
 
         totalProcessed += apiResult.deals.length;
         totalNewDeals += processResult.newDeals.length;
+
+        // Send instant notifications for favorite deals that reappeared
+        for (const newDeal of processResult.newDeals) {
+          await sendInstantFavoriteNotification(bot, newDeal.dealId);
+        }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         console.error(`Error processing store ${storeId}:`, error);
@@ -83,6 +94,11 @@ export async function runDailyParse(options: ParseJobOptions = {}): Promise<void
 
     const expiredCount = await expireExpiredDeals();
     console.log(`Marked ${expiredCount} deals as expired`);
+
+    // Send daily digests to all active users
+    console.log("Sending daily digests...");
+    const userIds = allUsers.map((user) => user.telegramId);
+    await sendDailyDigestToAllUsers(bot, userIds);
 
     console.log(
       `Daily parse complete: ${totalProcessed} total deals processed, ${totalNewDeals} new deals found, ${errorsEncountered} errors`

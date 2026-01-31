@@ -31,7 +31,7 @@ export function parseCallbackData(data: string): CallbackData | null {
       if (!isNaN(id)) {
         if (action === "set_store") {
           result.storeId = id;
-        } else if (action === "page") {
+        } else if (action === "page" || action === "digest") {
           result.offset = id;
         } else {
           result.dealId = id;
@@ -58,6 +58,7 @@ export function parseCallbackData(data: string): CallbackData | null {
       "clear_all_types",
       "back_to_settings",
       "deal_types",
+      "digest",
     ];
 
     if (!validActions.includes(action)) {
@@ -391,6 +392,14 @@ export async function handleCallbackQuery(
     case "deal_types":
       await bot.answerCallbackQuery(callbackQueryId);
       await sendTypeSelectorMessage(bot, userId);
+      break;
+
+    case "digest":
+      if (callbackData.offset !== undefined) {
+        const { handleDigestCallback } = await import("./digestCallbackHandler.js");
+        await handleDigestCallback(bot, callbackQueryId, userId, callbackData.offset);
+        tracker.callback('digest', { offset: String(callbackData.offset) });
+      }
       break;
 
     default:

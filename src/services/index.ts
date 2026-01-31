@@ -14,3 +14,8 @@ export {
   sendDealNotification,
   sendBatchNotifications,
 } from "./notificationService.js";
+export {
+  sendDailyDigestToUser,
+  sendDailyDigestToAllUsers,
+  sendInstantFavoriteNotification,
+} from "./digestService.js";
