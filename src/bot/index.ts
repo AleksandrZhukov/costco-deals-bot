@@ -4,6 +4,7 @@ import { handleDealsCommand } from "./commands/deals.js";
 import { handleFavoritesCommand } from "./commands/favorites.js";
 import { handleSettingsCommand } from "./commands/settings.js";
 import { handleCartCommand } from "./commands/cart.js";
+import { handleTypesCommand } from "./commands/dealTypes.js";
 import { handleCallbackQuery } from "./handlers/callbackHandler.js";
 
 export function setupBotHandlers(): void {
@@ -30,6 +31,11 @@ export function setupBotHandlers(): void {
   bot.onText(/\/settings/, async (msg) => {
     const chatId = msg.chat.id;
     await handleSettingsCommand(bot, chatId);
+  });
+
+  bot.onText(/\/types/, async (msg) => {
+    const chatId = msg.chat.id;
+    await handleTypesCommand(bot, chatId);
   });
 
   bot.onText(/\/cart/, async (msg) => {
@@ -62,6 +68,7 @@ export function registerCommands(): void {
       { command: "favorites", description: "Show your favorite deals" },
       { command: "cart", description: "View your shopping cart" },
       { command: "settings", description: "Configure your preferences" },
+      { command: "types", description: "Filter deals by type" },
     ])
     .then(() => {
       console.log("✅ Bot commands registered with Telegram");

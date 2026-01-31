@@ -2,9 +2,11 @@ import type TelegramBot from "node-telegram-bot-api";
 import { getUserByTelegramId } from "../../database/queries.js";
 import { updateUserStoreId } from "../../database/queries.js";
 import { updateUserNotifications } from "../../database/queries.js";
+import { getUserDealTypePreferences } from "../../database/queries.js";
 import { createUserActionTracker } from "../../utils/logger.js";
 import { runDailyParse } from "../../schedulers/dailyParser.js";
 import { hasActiveDealsForStore } from "../../database/queries.js";
+import { DEAL_TYPES } from "../../types/index.js";
 
 const AVAILABLE_STORES = [
   { id: 25, name: "Calgary, AB" },
@@ -17,6 +19,8 @@ const AVAILABLE_STORES = [
   { id: 19, name: "Saskatoon, SK" },
 ];
 
+// ... existing imports ...
+
 export async function handleSettingsCommand(
   bot: TelegramBot,
   chatId: number
@@ -27,13 +31,7 @@ export async function handleSettingsCommand(
     const user = await getUserByTelegramId(chatId);
 
     if (!user) {
-      await bot.sendMessage(
-        chatId,
-        "❌ User not found. Please use /start to initialize your account."
-      );
-      tracker.command('settings', {
-        user_found: false,
-      });
+      // ... existing code ...
       return;
     }
 
@@ -41,11 +39,19 @@ export async function handleSettingsCommand(
       AVAILABLE_STORES.find((s) => s.id === user.storeId)?.name || "Not set";
     const notifStatus = user.notificationsEnabled ? "✅ Enabled" : "❌ Disabled";
 
+    // Fetch deal preferences
+    const selectedTypeIds = await getUserDealTypePreferences(chatId);
+    const hasPreferences = selectedTypeIds.length > 0;
+    const dealTypesStatus = hasPreferences
+      ? selectedTypeIds.map(id => DEAL_TYPES.find(t => t.id === id)?.name).filter(Boolean).join(", ")
+      : "All types";
+
     const message = `
 ⚙️ **Current Settings**
 
 🏪 **Store:** ${storeName}${user.storeId ? ` (ID: ${user.storeId})` : ""}
 🔔 **Notifications:** ${notifStatus}
+🎯 **Deal Types:** ${dealTypesStatus}
 
 Click the buttons below to change your settings:
 `;
@@ -66,6 +72,12 @@ Click the buttons below to change your settings:
             callback_data: "toggle_notifications",
           },
         ],
+        [
+          {
+            text: "🎯 Deal Types",
+            callback_data: "deal_types",
+          },
+        ],
       ],
     };
 
@@ -77,11 +89,7 @@ Click the buttons below to change your settings:
       notifications_enabled: user.notificationsEnabled,
     });
   } catch (error) {
-    console.error("Error in /settings command:", error);
-    await bot.sendMessage(
-      chatId,
-      "❌ Sorry, something went wrong loading your settings."
-    );
+    // ... existing code ...
   }
 }
 

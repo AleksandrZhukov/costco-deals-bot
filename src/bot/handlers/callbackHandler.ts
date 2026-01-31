@@ -3,6 +3,7 @@ import { setDealHidden, addToCart, removeFromCart, isInCart, setDealFavorite, is
 import { handleStoreChange, handleToggleNotifications } from "../commands/settings.js";
 import { handlePagination } from "../commands/deals.js";
 import { removeFromCartCallback, clearCartCallback, cartSummaryCallback } from "../commands/cart.js";
+import { handleToggleType, handleSelectAllTypes, handleClearAllTypes, sendTypeSelectorMessage } from "../commands/dealTypes.js";
 import { createUserActionTracker } from "../../utils/logger.js";
 import { logError } from "../../utils/errorLogger.js";
 
@@ -52,6 +53,11 @@ export function parseCallbackData(data: string): CallbackData | null {
       "remcart",
       "cartsummary",
       "cart",
+      "toggle_type",
+      "select_all_types",
+      "clear_all_types",
+      "back_to_settings",
+      "deal_types",
     ];
 
     if (!validActions.includes(action)) {
@@ -357,6 +363,34 @@ export async function handleCallbackQuery(
       const { handleCartCommand } = await import("../commands/cart.js");
       await bot.answerCallbackQuery(callbackQueryId);
       await handleCartCommand(bot, userId);
+      break;
+
+    case "toggle_type":
+      if (callbackData.dealId) { // We reused dealId for typeId in parsing logic if it's just a number
+        await handleToggleType(bot, callbackQueryId, userId, callbackData.dealId, callbackMessage);
+      }
+      break;
+
+    case "select_all_types":
+      await handleSelectAllTypes(bot, callbackQueryId, userId, callbackMessage);
+      break;
+
+    case "clear_all_types":
+      await handleClearAllTypes(bot, callbackQueryId, userId, callbackMessage);
+      break;
+
+    case "back_to_settings":
+      const { handleSettingsCommand } = await import("../commands/settings.js");
+      await bot.answerCallbackQuery(callbackQueryId);
+      // If we have a message, we can edit it back to settings instead of sending a new one
+      // But handleSettingsCommand sends a new message. For better UX we might want to edit.
+      // For now, let's just call the command handler which is consistent with other actions.
+      await handleSettingsCommand(bot, userId);
+      break;
+      
+    case "deal_types":
+      await bot.answerCallbackQuery(callbackQueryId);
+      await sendTypeSelectorMessage(bot, userId);
       break;
 
     default:

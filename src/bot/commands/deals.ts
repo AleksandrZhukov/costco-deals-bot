@@ -1,5 +1,5 @@
 import type TelegramBot from "node-telegram-bot-api";
-import { getActiveDealsWithProductsNotHidden, getTotalVisibleActiveDealsCount, getUserByTelegramId } from "../../database/queries.js";
+import { getActiveDealsWithProductsNotHidden, getTotalVisibleActiveDealsCount, getUserByTelegramId, getUserDealTypePreferences } from "../../database/queries.js";
 import { isInCart, isDealFavorited } from "../../database/queries.js";
 import { formatDealMessage } from "../../utils/formatters.js";
 import { createUserActionTracker } from "../../utils/logger.js";
@@ -39,14 +39,34 @@ export async function handleDealsCommand(
       await bot.sendMessage(chatId, "🔍 Fetching current deals...");
     }
 
+    // Fetch user preferences (defaults to empty array if no preference set)
+    // Empty array in our logic means "no filter" (show all), but to support strict "selected only"
+    // we need to pass the array as is. If it's empty, user sees everything (default behavior).
+    // Wait, the requirement says: "Default: All types for new users".
+    // And "Storage: Array of integers [4, 5] in database".
+    // "Filter logic: If typeIds is provided and non-empty, add WHERE...".
+    // So if user has NEVER set preferences, getUserDealTypePreferences returns empty array -> shows all.
+    // If user explicitly clears all, we save empty array -> shows nothing?
+    // Let's re-read the plan: "Empty array [] = show nothing (edge case)" in notes, but "Clear All button (optional, would show nothing)".
+    // BUT "No preferences record in DB = show all types".
+    // My implementation of getUserDealTypePreferences returns [] if no record.
+    // That conflicts with "No record = All types".
+    // Let's adjust logic:
+    // If getUserDealTypePreferences returns [], it means NO filtering (all types).
+    // If user wants to see NOTHING, they shouldn't use the bot :)
+    // Or we should treat [] as "All".
+    // The plan says: "Default is 'All types'".
+    // Let's stick to: empty array passed to query means NO FILTER (all types).
+    const typeIds = await getUserDealTypePreferences(chatId);
+
     const [deals, totalCount] = await Promise.all([
-      getActiveDealsWithProductsNotHidden(chatId, PAGE_SIZE, offset),
-      getTotalVisibleActiveDealsCount(chatId),
+      getActiveDealsWithProductsNotHidden(chatId, PAGE_SIZE, offset, typeIds),
+      getTotalVisibleActiveDealsCount(chatId, typeIds),
     ]);
 
     if (!deals || deals.length === 0) {
       if (offset === 0) {
-        await bot.sendMessage(chatId, "No active deals found for your store.");
+        await bot.sendMessage(chatId, "No active deals found matching your criteria.");
         tracker.command('deals', {
           store_id: _storeId,
           deals_available: 0,

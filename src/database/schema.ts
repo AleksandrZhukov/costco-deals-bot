@@ -145,6 +145,21 @@ export const userShoppingCart = pgTable(
   })
 );
 
+// User deal type preferences table
+export const userDealTypePreferences = pgTable(
+  "user_deal_type_preferences",
+  {
+    id: serial("id").primaryKey(),
+    userTelegramId: bigint("user_telegram_id", { mode: "number" }).notNull().unique(),
+    selectedTypeIds: integer("selected_type_ids").array().notNull().default([]),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => ({
+    userIdx: index("idx_user_deal_type_prefs_user").on(table.userTelegramId),
+  })
+);
+
 // Relations
 export const productsRelations = relations(products, ({ many }) => ({
   deals: many(deals),
@@ -186,6 +201,16 @@ export const userShoppingCartRelations = relations(
     deal: one(deals, {
       fields: [userShoppingCart.dealId],
       references: [deals.id],
+    }),
+  })
+);
+
+export const userDealTypePreferencesRelations = relations(
+  userDealTypePreferences,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [userDealTypePreferences.userTelegramId],
+      references: [users.telegramId],
     }),
   })
 );

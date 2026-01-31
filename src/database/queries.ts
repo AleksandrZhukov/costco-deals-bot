@@ -1,4 +1,4 @@
-import { eq, and, desc, count, or, isNull } from "drizzle-orm";
+import { eq, and, desc, count, or, isNull, inArray } from "drizzle-orm";
 import { db } from "../config/database.js";
 import { createDbQueryTracker, getAllQueryFrequencies } from "../utils/logger.js";
 import {
@@ -8,6 +8,7 @@ import {
   userDealPreferences,
   notificationLog,
   userShoppingCart,
+  userDealTypePreferences,
 } from "./schema.js";
 
 export async function logSlowQuery<T>(
@@ -281,28 +282,39 @@ export async function getTotalActiveDealsCount(_storeId?: number, _userId?: numb
   return result[0]?.count ?? 0;
 }
 
-export async function getTotalVisibleActiveDealsCount(userTelegramId: number) {
+export async function getTotalVisibleActiveDealsCount(
+  userTelegramId: number,
+  typeIds?: number[]
+) {
   const user = await getUserByTelegramId(userTelegramId);
 
   if (!user?.storeId) {
     return 0;
   }
 
+  const conditions: (ReturnType<typeof eq> | ReturnType<typeof and> | ReturnType<typeof or> | ReturnType<typeof isNull> | ReturnType<typeof inArray>)[] = [
+    eq(deals.isActive, true),
+    eq(deals.storeId, user.storeId),
+    or(
+      isNull(userDealPreferences.id),
+      eq(userDealPreferences.isHidden, false)
+    ),
+  ];
+
+  // Add type filter if provided and non-empty
+  if (typeIds && typeIds.length > 0) {
+    conditions.push(inArray(products.goodsType, typeIds));
+  }
+
   const result = await db
     .select({ count: count() })
     .from(deals)
+    .innerJoin(products, eq(deals.productId, products.id))
     .leftJoin(userDealPreferences, and(
       eq(userDealPreferences.dealId, deals.id),
       eq(userDealPreferences.userTelegramId, userTelegramId)
     ))
-    .where(and(
-      eq(deals.isActive, true),
-      eq(deals.storeId, user.storeId),
-      or(
-        isNull(userDealPreferences.id),
-        eq(userDealPreferences.isHidden, false)
-      )
-    ));
+    .where(and(...conditions));
 
   return result[0]?.count ?? 0;
 }
@@ -310,12 +322,27 @@ export async function getTotalVisibleActiveDealsCount(userTelegramId: number) {
 export async function getActiveDealsWithProductsNotHidden(
   userTelegramId: number,
   limit?: number,
-  offset?: number
+  offset?: number,
+  typeIds?: number[]
 ) {
   const user = await getUserByTelegramId(userTelegramId);
 
   if (!user?.storeId) {
     return [];
+  }
+
+  const conditions: (ReturnType<typeof eq> | ReturnType<typeof and> | ReturnType<typeof or> | ReturnType<typeof isNull> | ReturnType<typeof inArray>)[] = [
+    eq(deals.isActive, true),
+    eq(deals.storeId, user.storeId),
+    or(
+      isNull(userDealPreferences.id),
+      eq(userDealPreferences.isHidden, false)
+    ),
+  ];
+
+  // Add type filter if provided and non-empty
+  if (typeIds && typeIds.length > 0) {
+    conditions.push(inArray(products.goodsType, typeIds));
   }
 
   const query = db
@@ -326,14 +353,7 @@ export async function getActiveDealsWithProductsNotHidden(
       eq(userDealPreferences.dealId, deals.id),
       eq(userDealPreferences.userTelegramId, userTelegramId)
     ))
-    .where(and(
-      eq(deals.isActive, true),
-      eq(deals.storeId, user.storeId),
-      or(
-        isNull(userDealPreferences.id),
-        eq(userDealPreferences.isHidden, false)
-      )
-    ))
+    .where(and(...conditions))
     .orderBy(desc(deals.firstSeenAt));
 
   if (limit !== undefined) {
@@ -568,4 +588,39 @@ export async function isInCart(userTelegramId: number, dealId: number) {
       )
     );
   return !!item;
+}
+
+// ============================================
+// User Deal Type Preferences Operations
+// ============================================
+
+export async function getUserDealTypePreferences(userTelegramId: number): Promise<number[]> {
+  const [prefs] = await db
+    .select()
+    .from(userDealTypePreferences)
+    .where(eq(userDealTypePreferences.userTelegramId, userTelegramId));
+  
+  return prefs?.selectedTypeIds ?? [];
+}
+
+export async function updateUserDealTypePreferences(
+  userTelegramId: number,
+  typeIds: number[]
+): Promise<void> {
+  await db
+    .insert(userDealTypePreferences)
+    .values({
+      userTelegramId,
+      selectedTypeIds: typeIds,
+    })
+    .onConflictDoUpdate({
+      target: userDealTypePreferences.userTelegramId,
+      set: { selectedTypeIds: typeIds, updatedAt: new Date() },
+    });
+}
+
+export async function clearUserDealTypePreferences(userTelegramId: number): Promise<void> {
+  await db
+    .delete(userDealTypePreferences)
+    .where(eq(userDealTypePreferences.userTelegramId, userTelegramId));
 }

@@ -886,3 +886,33 @@ None
 Status: Story completed. All acceptance criteria implemented.
 ---
 
+## Feature: Deal Type Filter Preferences ✅
+**Date:** Jan 31, 2026
+
+### Completed
+- ✅ Added Deal Type constants and schema support
+- ✅ Created `user_deal_type_preferences` table
+- ✅ Implemented database queries for storing and retrieving user type preferences
+- ✅ Updated deal fetching queries to filter by selected types (defaulting to all if none selected)
+- ✅ Implemented `/types` command for managing preferences via interactive UI
+- ✅ Added callback handlers for toggling types, selecting all, and clearing all
+- ✅ Integrated Deal Types button into Settings menu
+- ✅ Registered new command with bot
+
+### Files Created
+- `src/bot/commands/dealTypes.ts`
+- `drizzle/0002_same_albert_cleary.sql` (generated migration)
+
+### Files Modified
+- `src/types/index.ts`
+- `src/database/schema.ts`
+- `src/database/queries.ts`
+- `src/bot/index.ts`
+- `src/bot/commands/settings.ts`
+- `src/bot/commands/deals.ts`
+- `src/bot/handlers/callbackHandler.ts`
+
+### Status
+Feature complete. Users can now filter deals by Food, Clothing, and Non-Food types.
+
+---
